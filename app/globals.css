@@ -30,3 +30,5 @@
 @keyframes orbit-two-visible{from{transform:rotate(42deg)}to{transform:rotate(402deg)}}
 @keyframes orbit-two-art-visible{from{transform:translateY(-50%) rotate(-42deg)}to{transform:translateY(-50%) rotate(-402deg)}}
 @media(max-width:560px){.orbit-track-two{width:420px}}
+.orbit-track-one .orbital-art-opposite{left:auto;right:-60px}.orbit-track-two .orbital-art-opposite{left:-60px;right:auto}
+@media(max-width:560px){.orbit-track-one .orbital-art-opposite{right:-44px}.orbit-track-two .orbital-art-opposite{left:-44px}}
