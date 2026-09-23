@@ -15,7 +15,15 @@ export async function POST(request: Request) {
       options: { shouldCreateUser: true },
     });
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    if (error) {
+      const rateLimited = error.status === 429 || error.message.toLowerCase().includes("rate limit");
+      return NextResponse.json(
+        rateLimited
+          ? { error: "Alcanzamos el límite temporal de correos. Espera antes de solicitar otro código.", code: "email_rate_limit" }
+          : { error: "No pudimos enviar el código. Revisa el correo e inténtalo nuevamente." },
+        { status: rateLimited ? 429 : 400 },
+      );
+    }
     return NextResponse.json({ sent: true, email: normalizedEmail });
   } catch (error) {
     const message = error instanceof Error && error.message.includes("Missing Supabase")

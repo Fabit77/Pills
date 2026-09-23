@@ -1,19 +1,28 @@
 "use client";
 
 import { ArrowLeft, ArrowRight, BadgeCheck, Check, Mail, ShieldCheck, Sparkles, Users } from "lucide-react";
-import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
+import { FormEvent, Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 
 type AuthStep = "email" | "code";
 
 export default function LoginPage() {
+  return <Suspense fallback={<main className="landing-shell" />}><LoginContent /></Suspense>;
+}
+
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [step, setStep] = useState<AuthStep>("email");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+
+  const visibleMessage = message || (searchParams.get("error") === "google_unavailable"
+    ? "El acceso con Google todavía no está habilitado. Puedes ingresar con tu correo."
+    : "");
 
   async function requestCode(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setLoading(true); setMessage("");
@@ -73,13 +82,13 @@ export default function LoginPage() {
               <form onSubmit={requestCode}>
                 <label htmlFor="email">Correo electrónico</label>
                 <div className="email-field"><Mail size={17} /><input id="email" type="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="tu@organización.com" autoComplete="email" /></div>
-                {message && <p className="form-error">{message}</p>}
+                {visibleMessage && <p className="form-error">{visibleMessage}</p>}
                 <button className="primary-button login-submit" disabled={loading}>{loading ? "Enviando…" : <>Enviar código <ArrowRight size={17} /></>}</button>
               </form>
             </> : <form onSubmit={verifyCode} className="code-form">
               <label htmlFor="code">Código de verificación</label>
               <input className="code-input" id="code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))} placeholder="000000" autoFocus />
-              {message && <p className="form-error">{message}</p>}
+              {visibleMessage && <p className="form-error">{visibleMessage}</p>}
               <button className="primary-button login-submit" disabled={loading || code.length !== 6}>{loading ? "Verificando…" : <>Verificar y continuar <ArrowRight size={17} /></>}</button>
               <button type="button" className="back-button" onClick={() => { setStep("email"); setCode(""); setMessage(""); }}><ArrowLeft size={14} />Cambiar correo</button>
             </form>}

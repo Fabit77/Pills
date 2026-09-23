@@ -32,4 +32,6 @@ El acceso al Creator Studio usa códigos temporales por correo y Google mediante
 6. En **Authentication → Emails → Magic Link**, usa `{{ .Token }}` en la plantilla para enviar el código de seis dígitos.
 7. En **Authentication → Sign In / Providers → Google**, habilita Google y configura las credenciales OAuth.
 
+El proveedor de correo incorporado de Supabase permite solo dos mensajes por hora. Antes de producción, conecta SMTP propio en **Authentication → SMTP Settings** y aumenta el límite de correos en **Authentication → Rate Limits**. La plantilla lista para copiar está en `supabase/templates/magic-link.html`.
+
 Las migraciones separan los datos privados del perfil de la identidad pública. El correo permanece exclusivamente en Supabase Auth; `public_usernames` expone solo el nombre de usuario. Las políticas RLS impiden crear campañas o colecciones sin completar ese nombre.
