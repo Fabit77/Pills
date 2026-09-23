@@ -13,6 +13,7 @@ import {
   Gauge,
   Menu,
   MoreHorizontal,
+  ImagePlus,
   Plus,
   Search,
   Settings,
@@ -41,6 +42,7 @@ type Campaign = {
   color: string;
   accent: string;
   initials: string;
+  imageUrl?: string;
 };
 
 const initialCampaigns: Campaign[] = [];
@@ -58,6 +60,7 @@ const formatNumber = (value: number) => new Intl.NumberFormat("es-CL").format(va
 function PillArtwork({ campaign, large = false }: { campaign: Campaign; large?: boolean }) {
   return (
     <div className={`pill-art ${large ? "pill-art-large" : ""}`} style={{ "--pill": campaign.color, "--pill-soft": campaign.accent } as React.CSSProperties}>
+      {campaign.imageUrl && <span className="pill-uploaded-art" style={{ backgroundImage: `url(${campaign.imageUrl})` }} />}
       <div className="pill-cut pill-cut-top" />
       <div className="pill-cut pill-cut-bottom" />
       <span className="pill-year">PILLS® / {campaign.date.slice(-4)}</span>
@@ -128,8 +131,10 @@ export default function CreatorStudio() {
     const location = String(data.get("location") || "Por confirmar");
     const supply = Number(data.get("supply") || 1000);
     const dateValue = String(data.get("date") || "");
+    const artwork = data.get("artwork");
+    const imageUrl = artwork instanceof File && artwork.size ? URL.createObjectURL(artwork) : undefined;
     const date = dateValue ? new Date(`${dateValue}T12:00:00`).toLocaleDateString("es-CL", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase() : "SIN FECHA";
-    const next: Campaign = { id: Date.now(), name, event: `${eventType} · ${location}`, date, status: "Borrador", claimed: 0, total: supply, color: "#1f6f78", accent: "#c6eff1", initials: name.split(" ").map((word) => word[0]).join("").slice(0, 3).toUpperCase() };
+    const next: Campaign = { id: Date.now(), name, event: `${eventType} · ${location}`, date, status: "Borrador", claimed: 0, total: supply, color: "#1f6f78", accent: "#c6eff1", initials: name.split(" ").map((word) => word[0]).join("").slice(0, 3).toUpperCase(), imageUrl };
     setCampaigns((current) => [next, ...current]);
     setShowCreate(false);
     setView("campaigns");
@@ -223,5 +228,11 @@ function Profile({ profile, onSaved }: { profile: CreatorProfile; onSaved: (prof
 }
 
 function CreateCampaign({ onClose, onSubmit }: { onClose: () => void; onSubmit: (event: FormEvent<HTMLFormElement>) => void }) {
-  return <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><div className="modal" role="dialog" aria-modal="true" aria-labelledby="create-title"><div className="modal-head"><div><span className="section-kicker"><span /> NUEVO COLECCIONABLE</span><h2 id="create-title">¿Qué experiencia<br />vamos a guardar?</h2></div><button className="icon-button" onClick={onClose}><X /></button></div><form onSubmit={onSubmit}><label><span>Nombre de la experiencia</span><input name="name" required placeholder="Ej. Una noche en el Nacional" autoFocus /></label><div className="form-grid"><label><span>Tipo de evento</span><select name="type" defaultValue="Concierto"><option>Concierto</option><option>Fútbol</option><option>Festival</option><option>Cultura</option><option>Marca</option><option>Comunidad</option></select></label><label><span>Fecha</span><input name="date" type="date" /></label></div><label><span>Lugar</span><input name="location" placeholder="Ej. Estadio Nacional, Santiago" /></label><div className="form-grid"><label><span>Cantidad disponible</span><input name="supply" type="number" min="1" defaultValue="5000" /></label><label><span>Quién puede coleccionarla</span><select defaultValue="Asistentes"><option>Asistentes</option><option>Cualquier persona</option><option>Solo invitados</option></select></label></div><div className="form-note"><ShieldCheck /><p><strong>Primero crearemos el borrador.</strong> Podrás diseñar la Pill, sumar colaboradores y definir cómo se colecciona antes de publicarla.</p></div><div className="modal-actions"><button type="button" className="secondary-button" onClick={onClose}>Cancelar</button><button className="primary-button" type="submit">Crear coleccionable <ArrowRight size={17} /></button></div></form></div></div>;
+  const [preview, setPreview] = useState("");
+  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
+  function selectArtwork(file?: File) {
+    if (preview) URL.revokeObjectURL(preview);
+    setPreview(file ? URL.createObjectURL(file) : "");
+  }
+  return <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><div className="modal collectible-modal" role="dialog" aria-modal="true" aria-labelledby="create-title"><div className="modal-head"><div><span className="section-kicker"><span /> NUEVO COLECCIONABLE</span><h2 id="create-title">¿Qué experiencia<br />vamos a guardar?</h2></div><button className="icon-button" onClick={onClose}><X /></button></div><form className="collectible-form" onSubmit={onSubmit}><div className="artwork-column"><span className="field-title">Arte del coleccionable</span><label className={`artwork-uploader ${preview ? "has-artwork" : ""}`}><input name="artwork" type="file" accept="image/png,image/jpeg,image/webp,image/gif" required onChange={(event) => selectArtwork(event.target.files?.[0])} />{preview ? <span className="artwork-preview" style={{ backgroundImage: `url(${preview})` }} /> : <><span className="upload-icon"><ImagePlus /></span><strong>Cargar imagen</strong><small>Formato cuadrado 1:1</small><small>PNG, JPG, WEBP o GIF</small></>}</label><p>Recomendado: 1600 × 1600 px. La imagen ocupará todo el coleccionable.</p></div><div className="collectible-fields"><label><span>Nombre de la experiencia</span><input name="name" required placeholder="Ej. Una noche en el Nacional" autoFocus /></label><div className="form-grid"><label><span>Tipo de evento</span><select name="type" defaultValue="Concierto"><option>Concierto</option><option>Fútbol</option><option>Festival</option><option>Cultura</option><option>Marca</option><option>Comunidad</option></select></label><label><span>Fecha</span><input name="date" type="date" /></label></div><label><span>Lugar</span><input name="location" placeholder="Ej. Estadio Nacional, Santiago" /></label><div className="form-grid"><label><span>Cantidad disponible</span><input name="supply" type="number" min="1" defaultValue="5000" /></label><label><span>Quién puede coleccionarla</span><select defaultValue="Asistentes"><option>Asistentes</option><option>Cualquier persona</option><option>Solo invitados</option></select></label></div><div className="form-note"><ShieldCheck /><p><strong>Primero crearemos el borrador.</strong> Podrás sumar colaboradores y definir cómo se colecciona antes de publicarlo.</p></div><div className="modal-actions"><button type="button" className="secondary-button" onClick={onClose}>Cancelar</button><button className="primary-button" type="submit">Crear coleccionable <ArrowRight size={17} /></button></div></div></form></div></div>;
 }
