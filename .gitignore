@@ -1,6 +1,9 @@
 node_modules
 .next
 .vercel
+.agents
+skills-lock.json
+supabase/.temp
 .env*
 !.env.example
 npm-debug.log*

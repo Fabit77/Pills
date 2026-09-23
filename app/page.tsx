@@ -24,6 +24,7 @@ import {
   Zap,
 } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type View = "overview" | "campaigns" | "collections" | "verification" | "team";
 type CampaignStatus = "Activa" | "Borrador" | "Programada";
@@ -71,6 +72,7 @@ function PillArtwork({ campaign, large = false }: { campaign: Campaign; large?: 
 }
 
 export default function CreatorStudio() {
+  const router = useRouter();
   const [view, setView] = useState<View>("overview");
   const [campaigns, setCampaigns] = useState(initialCampaigns);
   const [showCreate, setShowCreate] = useState(false);
@@ -143,7 +145,7 @@ export default function CreatorStudio() {
           <button><CircleHelp size={18} />Centro de ayuda</button>
           <button><Settings size={18} />Configuración</button>
           <div className="plan-card"><span>PLAN PRO</span><strong>8.624 / 20.000</strong><small>Pills coleccionadas este mes</small><div><i style={{ width: "43%" }} /></div></div>
-          <button className="user-row"><span className="avatar">FM</span><span><strong>Felipe Morales</strong><small>Administrador</small></span><MoreHorizontal size={17} /></button>
+          <button className="user-row" onClick={async () => { await fetch("/auth/signout", { method: "POST" }); router.replace("/login"); router.refresh(); }}><span className="avatar">FM</span><span><strong>Felipe Morales</strong><small>Administrador · Cerrar sesión</small></span><MoreHorizontal size={17} /></button>
         </div>
       </aside>
 
