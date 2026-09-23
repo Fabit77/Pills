@@ -59,7 +59,7 @@ const formatNumber = (value: number) => new Intl.NumberFormat("es-CL").format(va
 
 function PillArtwork({ campaign, large = false }: { campaign: Campaign; large?: boolean }) {
   return (
-    <div className={`pill-art ${large ? "pill-art-large" : ""}`} style={{ "--pill": campaign.color, "--pill-soft": campaign.accent } as React.CSSProperties}>
+    <div className={`pill-art ${large ? "pill-art-large" : ""} ${campaign.imageUrl ? "pill-art-uploaded" : ""}`} style={{ "--pill": campaign.color, "--pill-soft": campaign.accent } as React.CSSProperties}>
       {campaign.imageUrl && <span className="pill-uploaded-art" style={{ backgroundImage: `url(${campaign.imageUrl})` }} />}
       <div className="pill-cut pill-cut-top" />
       <div className="pill-cut pill-cut-bottom" />
