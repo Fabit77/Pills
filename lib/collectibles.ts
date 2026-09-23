@@ -10,7 +10,15 @@ export function campaignJson(row: Record<string, unknown>, collaborators: string
   const now = Date.now();
   const startTime = startsAt ? new Date(startsAt).getTime() : 0;
   const endTime = endsAt ? new Date(endsAt).getTime() : Number.POSITIVE_INFINITY;
-  const status = reviewStatus === "rejected" ? "Rechazado" : reviewStatus === "pending" ? "En revisión" : now < startTime ? "Programado" : now > endTime ? "Finalizado" : "Aprobado";
+  const status = reviewStatus === "rejected"
+    ? "Rechazado"
+    : reviewStatus === "pending"
+      ? "Pendiente de aprobación"
+      : now > endTime
+        ? "Finalizado"
+        : now < startTime
+          ? "Programado"
+          : "Activo";
 
   return {
     id: row.id,
