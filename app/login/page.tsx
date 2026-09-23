@@ -20,7 +20,7 @@ function LoginContent() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  const visibleMessage = message || (searchParams.get("error") === "google_unavailable"
+  const visibleMessage = message || (step === "email" && searchParams.get("error") === "google_unavailable"
     ? "El acceso con Google todavía no está habilitado. Puedes ingresar con tu correo."
     : "");
 
