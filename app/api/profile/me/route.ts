@@ -12,11 +12,15 @@ export async function GET() {
     supabase.from("app_admins").select("role").eq("user_id", authData.user.id).maybeSingle(),
   ]);
 
+  const adminRole = admin?.role === "super_admin" || admin?.role === "curator" || admin?.role === "admin" ? admin.role : null;
+  const fallbackSuperAdmin = authData.user.email?.toLowerCase() === "fabiobuscio97@gmail.com" || username?.username?.toLowerCase() === "fabit";
   return NextResponse.json({
     username: username?.username ?? "",
     firstName: profile?.first_name ?? "",
     lastName: profile?.last_name ?? "",
     bio: profile?.bio ?? "",
-    isSuperAdmin: Boolean(admin) || authData.user.email?.toLowerCase() === "fabiobuscio97@gmail.com" || username?.username?.toLowerCase() === "fabit",
+    adminRole: adminRole ?? (fallbackSuperAdmin ? "super_admin" : null),
+    canModerate: Boolean(adminRole) || fallbackSuperAdmin,
+    isSuperAdmin: adminRole === "super_admin" || fallbackSuperAdmin,
   });
 }
