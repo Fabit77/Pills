@@ -11,7 +11,7 @@ export async function createClient() {
     cookies: {
       getAll() { return cookieStore.getAll(); },
       setAll(cookiesToSet) {
-        try { cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options)); }
+        try { cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, { ...options, maxAge: options.maxAge ?? 60 * 60 * 24 * 10 })); }
         catch { /* Server Components cannot write cookies; proxy refreshes them. */ }
       },
     },

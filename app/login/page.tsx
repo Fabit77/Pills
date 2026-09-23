@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowLeft, ArrowRight, BadgeCheck, Check, Mail, ShieldCheck, Sparkles, Users } from "lucide-react";
-import { FormEvent, Suspense, useState } from "react";
+import { FormEvent, Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 
@@ -19,6 +19,13 @@ function LoginContent() {
   const [step, setStep] = useState<AuthStep>("email");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [signedProfile, setSignedProfile] = useState<{ username: string } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/profile/me").then(async (response) => response.ok ? response.json() : null).then((data) => {
+      if (data?.username) setSignedProfile({ username: data.username });
+    }).catch(() => undefined);
+  }, []);
 
   const visibleMessage = message || (step === "email" && searchParams.get("error") === "google_unavailable"
     ? "El acceso con Google todavía no está habilitado. Puedes ingresar con tu correo."
@@ -49,7 +56,7 @@ function LoginContent() {
     <main className="landing-shell">
       <nav className="landing-nav">
         <a className="landing-brand" href="/login"><span className="brand-mark"><span /></span><strong>Pills</strong><em>Creator Studio</em></a>
-        <a className="nav-login" href="#access">Iniciar sesión o crear cuenta <ArrowRight size={15} /></a>
+        <a className="nav-login" href={signedProfile ? "/studio" : "#access"}>{signedProfile ? "Crear coleccionable" : "Iniciar sesión o crear cuenta"} <ArrowRight size={15} /></a>
       </nav>
       <section className="landing-hero">
         <div className="landing-copy">
@@ -73,7 +80,13 @@ function LoginContent() {
             <span className="orbital-art"><Image src="/pills/asadao-42.webp" alt="Pill AsaDAO 42" fill sizes="120px" unoptimized /></span>
           </div>
           <article className="access-card">
-            <span className="access-icon"><Mail /></span><span className="eyebrow">ACCESO PARA CREADORES</span>
+            {signedProfile ? <>
+              <span className="access-icon"><Sparkles /></span><span className="eyebrow">TU CUENTA DE CREADOR</span>
+              <h2>Hola, @{signedProfile.username}.</h2>
+              <p>Tu sesión está activa. Continúa creando recuerdos para las experiencias que importan.</p>
+              <a className="primary-button login-submit" href="/studio">Crear coleccionable <ArrowRight size={17} /></a>
+              <a className="back-button" href="/studio">Ir al Creator Studio</a>
+            </> : <><span className="access-icon"><Mail /></span><span className="eyebrow">ACCESO PARA CREADORES</span>
             <h2>{step === "email" ? "Inicia sesión o crea tu cuenta." : "Revisa tu correo."}</h2>
             <p>{step === "email" ? "Entra con Google o recibe un código de acceso. No necesitas crear una contraseña." : <>Enviamos un código de acceso a <strong>{email}</strong>.</>}</p>
             {step === "email" ? <>
@@ -92,6 +105,7 @@ function LoginContent() {
               <button className="primary-button login-submit" disabled={loading || code.length < 6}>{loading ? "Verificando…" : <>Verificar y continuar <ArrowRight size={17} /></>}</button>
               <button type="button" className="back-button" onClick={() => { setStep("email"); setCode(""); setMessage(""); }}><ArrowLeft size={14} />Cambiar correo</button>
             </form>}
+            </>}
             <div className="security-note"><ShieldCheck /><span>Tu correo siempre es privado. Solo tu nombre de usuario será público.</span></div>
           </article>
         </div>

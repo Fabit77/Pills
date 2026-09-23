@@ -21,7 +21,7 @@ export async function updateSession(request: NextRequest) {
       setAll(cookiesToSet, headersToSet) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
         response = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+        cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, { ...options, maxAge: options.maxAge ?? 60 * 60 * 24 * 10 }));
         if (headersToSet) Object.entries(headersToSet).forEach(([name, value]) => response.headers.set(name, value));
       },
     },
@@ -41,7 +41,7 @@ export async function updateSession(request: NextRequest) {
   }
   if (path === "/") {
     const target = request.nextUrl.clone();
-    target.pathname = signedIn ? (hasUsername ? "/studio" : "/onboarding") : "/login";
+    target.pathname = "/login";
     return NextResponse.redirect(target);
   }
 
@@ -67,12 +67,6 @@ export async function updateSession(request: NextRequest) {
   if (path === "/onboarding" && hasUsername) {
     const target = request.nextUrl.clone();
     target.pathname = "/studio";
-    return NextResponse.redirect(target);
-  }
-
-  if (path === "/login" && signedIn) {
-    const target = request.nextUrl.clone();
-    target.pathname = hasUsername ? "/studio" : "/onboarding";
     return NextResponse.redirect(target);
   }
 
