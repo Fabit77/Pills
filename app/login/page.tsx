@@ -75,7 +75,7 @@ function LoginContent() {
           <article className="access-card">
             <span className="access-icon"><Mail /></span><span className="eyebrow">ACCESO PARA CREADORES</span>
             <h2>{step === "email" ? "Inicia sesión o crea tu cuenta." : "Revisa tu correo."}</h2>
-            <p>{step === "email" ? "Entra con Google o recibe un código de acceso. No necesitas crear una contraseña." : <>Enviamos un código de 6 dígitos a <strong>{email}</strong>.</>}</p>
+            <p>{step === "email" ? "Entra con Google o recibe un código de acceso. No necesitas crear una contraseña." : <>Enviamos un código de acceso a <strong>{email}</strong>.</>}</p>
             {step === "email" ? <>
               <a className="google-button" href="/auth/google"><GoogleMark />Continuar con Google</a>
               <div className="auth-divider"><span>o continúa con correo</span></div>
@@ -87,9 +87,9 @@ function LoginContent() {
               </form>
             </> : <form onSubmit={verifyCode} className="code-form">
               <label htmlFor="code">Código de verificación</label>
-              <input className="code-input" id="code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))} placeholder="000000" autoFocus />
+              <input className="code-input" id="code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6,8}" minLength={6} maxLength={8} required value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))} placeholder="000000" autoFocus />
               {visibleMessage && <p className="form-error">{visibleMessage}</p>}
-              <button className="primary-button login-submit" disabled={loading || code.length !== 6}>{loading ? "Verificando…" : <>Verificar y continuar <ArrowRight size={17} /></>}</button>
+              <button className="primary-button login-submit" disabled={loading || code.length < 6}>{loading ? "Verificando…" : <>Verificar y continuar <ArrowRight size={17} /></>}</button>
               <button type="button" className="back-button" onClick={() => { setStep("email"); setCode(""); setMessage(""); }}><ArrowLeft size={14} />Cambiar correo</button>
             </form>}
             <div className="security-note"><ShieldCheck /><span>Tu correo siempre es privado. Solo tu nombre de usuario será público.</span></div>

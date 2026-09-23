@@ -4,8 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 export async function POST(request: Request) {
   try {
     const { email, token } = await request.json();
-    if (typeof email !== "string" || typeof token !== "string" || !/^\d{6}$/.test(token)) {
-      return NextResponse.json({ error: "Ingresa el código de 6 dígitos." }, { status: 400 });
+    if (typeof email !== "string" || typeof token !== "string" || !/^\d{6,8}$/.test(token)) {
+      return NextResponse.json({ error: "Ingresa el código de 6 u 8 dígitos." }, { status: 400 });
     }
 
     const supabase = await createClient();
