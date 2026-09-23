@@ -56,7 +56,7 @@ function LoginContent() {
           <span className="section-kicker"><span /> CREATOR STUDIO</span>
           <h1>Haz que tu evento<br />se quede con ellos.</h1>
           <p>Crea recuerdos digitales coleccionables para conciertos, partidos y experiencias de marca. Una nueva forma de extender la relación con tus fans.</p>
-          <div className="landing-benefits"><span><Check />Crea y publica campañas</span><span><Check />Invita colaboradores</span><span><Check />Mide colección y recurrencia</span></div>
+          <div className="landing-benefits"><span><Check />Crea y publica coleccionables</span><span><Check />Invita colaboradores</span><span><Check />Mide colección y recurrencia</span></div>
           <div className="trust-row"><div className="trust-avatars"><i>LN</i><i>AF</i><i>H</i></div><span>Experiencias creadas por artistas,<br />clubes y equipos de marketing.</span></div>
         </div>
         <div className="access-stage" id="access">
