@@ -8,8 +8,16 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) return NextResponse.redirect(`${origin}${next}`);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    if (!error && data.user) {
+      const { data: publicProfile } = await supabase
+        .from("public_usernames")
+        .select("username")
+        .eq("user_id", data.user.id)
+        .maybeSingle();
+      const destination = publicProfile?.username ? (next === "/onboarding" ? "/studio" : next) : "/onboarding";
+      return NextResponse.redirect(`${origin}${destination}`);
+    }
   }
 
   return NextResponse.redirect(`${origin}/login?error=auth_callback`);

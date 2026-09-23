@@ -20,7 +20,7 @@ El prototipo actual funciona con estado local. La integración con Supabase y St
 
 ## Autenticación y datos
 
-El acceso al Creator Studio usa enlaces mágicos de Supabase Auth. La ruta `/studio` está protegida por sesión y `/login` funciona como landing pública.
+El acceso al Creator Studio usa códigos temporales por correo y Google mediante Supabase Auth. La ruta `/studio` está protegida por sesión, `/login` funciona como landing pública y `/onboarding` exige un nombre de usuario antes de crear una Pill.
 
 1. Instala o conecta Supabase al proyecto de Vercel.
 2. Copia `.env.example` a `.env.local` para desarrollo local.
@@ -28,5 +28,8 @@ El acceso al Creator Studio usa enlaces mágicos de Supabase Auth. La ruta `/stu
    - `http://localhost:3000/auth/callback`
    - `https://pills-nu.vercel.app/auth/callback`
 4. Aplica `supabase/migrations/20260923010000_initial_creator_studio.sql`.
+5. Aplica `supabase/migrations/20260923020000_usernames_and_onboarding.sql`.
+6. En **Authentication → Emails → Magic Link**, usa `{{ .Token }}` en la plantilla para enviar el código de seis dígitos.
+7. En **Authentication → Sign In / Providers → Google**, habilita Google y configura las credenciales OAuth.
 
-La migración crea perfiles, organizaciones, roles, colecciones, campañas y políticas RLS para que cada equipo acceda únicamente a sus datos.
+Las migraciones separan los datos privados del perfil de la identidad pública. El correo permanece exclusivamente en Supabase Auth; `public_usernames` expone solo el nombre de usuario. Las políticas RLS impiden crear campañas o colecciones sin completar ese nombre.

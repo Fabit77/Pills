@@ -28,10 +28,20 @@ export async function updateSession(request: NextRequest) {
   });
 
   const { data } = await supabase.auth.getClaims();
-  const signedIn = Boolean(data?.claims);
+  const claims = data?.claims;
+  const signedIn = Boolean(claims);
+  let hasUsername = false;
+  if (signedIn && typeof claims?.sub === "string") {
+    const { data: username } = await supabase
+      .from("public_usernames")
+      .select("username")
+      .eq("user_id", claims.sub)
+      .maybeSingle();
+    hasUsername = Boolean(username?.username);
+  }
   if (path === "/") {
     const target = request.nextUrl.clone();
-    target.pathname = signedIn ? "/studio" : "/login";
+    target.pathname = signedIn ? (hasUsername ? "/studio" : "/onboarding") : "/login";
     return NextResponse.redirect(target);
   }
 
@@ -42,9 +52,27 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(target);
   }
 
-  if (path === "/login" && signedIn) {
+  if (path.startsWith("/studio") && signedIn && !hasUsername) {
+    const target = request.nextUrl.clone();
+    target.pathname = "/onboarding";
+    return NextResponse.redirect(target);
+  }
+
+  if (path === "/onboarding" && !signedIn) {
+    const target = request.nextUrl.clone();
+    target.pathname = "/login";
+    return NextResponse.redirect(target);
+  }
+
+  if (path === "/onboarding" && hasUsername) {
     const target = request.nextUrl.clone();
     target.pathname = "/studio";
+    return NextResponse.redirect(target);
+  }
+
+  if (path === "/login" && signedIn) {
+    const target = request.nextUrl.clone();
+    target.pathname = hasUsername ? "/studio" : "/onboarding";
     return NextResponse.redirect(target);
   }
 
