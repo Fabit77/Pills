@@ -32,3 +32,18 @@
 @media(max-width:560px){.orbit-track-two{width:420px}}
 .orbit-track-one .orbital-art-opposite{left:auto;right:-60px}.orbit-track-two .orbital-art-opposite{left:-60px;right:auto}
 @media(max-width:560px){.orbit-track-one .orbital-art-opposite{right:-44px}.orbit-track-two .orbital-art-opposite{left:-44px}}
+
+/* Four independent paths keep every collectible visually separated */
+.orbit-track-one{width:680px;height:420px;animation:collectible-orbit-one 118s linear infinite}.orbit-track-one .orbital-art{left:-60px;right:auto;animation:collectible-art-one 118s linear infinite}
+.orbit-track-two{width:660px;height:550px;animation:collectible-orbit-two 137s linear infinite}.orbit-track-two .orbital-art{left:auto;right:-60px;animation:collectible-art-two 137s linear infinite}
+.orbit-track-three{width:760px;height:420px;animation:collectible-orbit-three 157s linear infinite}.orbit-track-three .orbital-art{left:-60px;right:auto;animation:collectible-art-three 157s linear infinite}
+.orbit-track-four{width:600px;height:480px;animation:collectible-orbit-four 173s linear infinite}.orbit-track-four .orbital-art{left:auto;right:-60px;animation:collectible-art-four 173s linear infinite}
+@keyframes collectible-orbit-one{from{transform:rotate(22deg)}to{transform:rotate(382deg)}}
+@keyframes collectible-art-one{from{transform:translateY(-50%) rotate(-22deg)}to{transform:translateY(-50%) rotate(-382deg)}}
+@keyframes collectible-orbit-two{from{transform:rotate(35deg)}to{transform:rotate(395deg)}}
+@keyframes collectible-art-two{from{transform:translateY(-50%) rotate(-35deg)}to{transform:translateY(-50%) rotate(-395deg)}}
+@keyframes collectible-orbit-three{from{transform:rotate(-25deg)}to{transform:rotate(335deg)}}
+@keyframes collectible-art-three{from{transform:translateY(-50%) rotate(25deg)}to{transform:translateY(-50%) rotate(-335deg)}}
+@keyframes collectible-orbit-four{from{transform:rotate(-25deg)}to{transform:rotate(335deg)}}
+@keyframes collectible-art-four{from{transform:translateY(-50%) rotate(25deg)}to{transform:translateY(-50%) rotate(-335deg)}}
+@media(max-width:560px){.orbit-track-one{width:480px;height:310px}.orbit-track-two{width:340px;height:520px}.orbit-track-three{width:520px;height:250px}.orbit-track-four{width:280px;height:560px}.orbit-track-three .orbital-art{left:-44px}.orbit-track-four .orbital-art{right:-44px}}

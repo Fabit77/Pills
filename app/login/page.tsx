@@ -53,11 +53,15 @@ export default function LoginPage() {
         <div className="access-stage" id="access">
           <div className="orbit orbit-one orbit-track orbit-track-one">
             <span className="orbital-art"><Image src="/pills/aysen-futuro-final.webp" alt="Pill Aysén Futuro" fill sizes="120px" loading="eager" unoptimized /></span>
-            <span className="orbital-art orbital-art-opposite"><Image src="/pills/campus-on-chain.webp" alt="Pill Campus on Chain" fill sizes="120px" unoptimized /></span>
           </div>
           <div className="orbit orbit-two orbit-track orbit-track-two">
             <span className="orbital-art"><Image src="/pills/asadao-final.webp" alt="Pill AsaDAO" fill sizes="120px" loading="eager" unoptimized /></span>
-            <span className="orbital-art orbital-art-opposite"><Image src="/pills/asadao-42.webp" alt="Pill AsaDAO 42" fill sizes="120px" unoptimized /></span>
+          </div>
+          <div className="orbit orbit-track orbit-track-three">
+            <span className="orbital-art"><Image src="/pills/campus-on-chain.webp" alt="Pill Campus on Chain" fill sizes="120px" unoptimized /></span>
+          </div>
+          <div className="orbit orbit-track orbit-track-four">
+            <span className="orbital-art"><Image src="/pills/asadao-42.webp" alt="Pill AsaDAO 42" fill sizes="120px" unoptimized /></span>
           </div>
           <article className="access-card">
             <span className="access-icon"><Mail /></span><span className="eyebrow">ACCESO PARA CREADORES</span>
