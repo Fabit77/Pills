@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { campaignJson, hashValue } from "@/lib/collectibles";
+import { ArtworkError, optimizeArtwork } from "@/lib/artwork";
 
 const campaignColumns = "id,name,description,event_type,venue,starts_at,ends_at,supply,status,artwork_url,qr_enabled,qr_token,secret_word_hash,review_status,rejection_reason,claimed_count,first_claimed_at,created_at";
 
@@ -43,7 +44,9 @@ export async function POST(request: Request) {
     const endsAt = String(form.get("endDate") ?? "");
     const secretWord = String(form.get("secretWord") ?? "").trim();
     if (!name || !description || !startsAt || !endsAt || !(artwork instanceof File) || !artwork.size) return NextResponse.json({ error: "Completa los campos obligatorios." }, { status: 400 });
-    if (artwork.size > 5 * 1024 * 1024) return NextResponse.json({ error: "El arte supera el límite de 5 MB." }, { status: 400 });
+    let optimizedArtwork: Buffer;
+    try { optimizedArtwork = await optimizeArtwork(artwork); }
+    catch (error) { return NextResponse.json({ error: error instanceof ArtworkError ? error.message : "No pudimos procesar la imagen." }, { status: 400 }); }
     if (new Date(endsAt) <= new Date(startsAt)) return NextResponse.json({ error: "La fecha de término debe ser posterior." }, { status: 400 });
 
     let { data: membership } = await supabase.from("organization_members").select("organization_id").eq("user_id", user.id).limit(1).maybeSingle();
@@ -55,9 +58,8 @@ export async function POST(request: Request) {
       membership = { organization_id: organizationId };
     }
 
-    const extension = artwork.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "png";
-    const filePath = `${user.id}/${crypto.randomUUID()}.${extension}`;
-    const { error: uploadError } = await supabase.storage.from("collectible-artwork").upload(filePath, artwork, { contentType: artwork.type, upsert: false });
+    const filePath = `${user.id}/${crypto.randomUUID()}.webp`;
+    const { error: uploadError } = await supabase.storage.from("collectible-artwork").upload(filePath, optimizedArtwork, { contentType: "image/webp", upsert: false });
     if (uploadError) return NextResponse.json({ error: "No pudimos almacenar el arte." }, { status: 500 });
     const { data: publicArtwork } = supabase.storage.from("collectible-artwork").getPublicUrl(filePath);
 
