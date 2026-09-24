@@ -4,7 +4,7 @@ import { campaignJson, hashValue } from "@/lib/collectibles";
 import { ArtworkError, optimizeArtwork } from "@/lib/artwork";
 import { decryptPrivateValue, encryptPrivateValue } from "@/lib/private-values";
 
-const campaignColumns = "id,name,description,event_type,venue,starts_at,ends_at,supply,status,artwork_url,qr_enabled,qr_token,secret_word_hash,review_status,rejection_reason,claimed_count,first_claimed_at,is_paused,created_by,created_at";
+const campaignColumns = "id,name,description,event_type,venue,starts_at,ends_at,event_url,supply,status,artwork_url,qr_enabled,qr_token,secret_word_hash,review_status,submitted_at,rejection_reason,claimed_count,first_claimed_at,is_paused,created_by,created_at";
 
 async function requireUser() {
   const supabase = await createClient();
@@ -20,14 +20,14 @@ export async function GET() {
   if (error) return NextResponse.json({ error: "No pudimos cargar tus coleccionables." }, { status: 500 });
 
   const ids = (data ?? []).map((row) => row.id);
-  const collaboratorMap = new Map<string, Array<{ userId: string; username: string; role: "admin" | "reader" }>>();
+  const collaboratorMap = new Map<string, Array<{ userId: string; username: string; role: "reader" }>>();
   const secretMap = new Map<string, string>();
   if (ids.length) {
     const { data: collaborators } = await supabase.from("campaign_collaborators").select("campaign_id,user_id,role").in("campaign_id", ids);
     const userIds = [...new Set((collaborators ?? []).map((item) => item.user_id))];
     const { data: usernames } = userIds.length ? await supabase.from("public_usernames").select("user_id,username").in("user_id", userIds) : { data: [] };
     const names = new Map((usernames ?? []).map((item) => [item.user_id, item.username]));
-    for (const item of collaborators ?? []) collaboratorMap.set(item.campaign_id, [...(collaboratorMap.get(item.campaign_id) ?? []), { userId: item.user_id, username: names.get(item.user_id) ?? "usuario", role: item.role === "reader" ? "reader" : "admin" }]);
+    for (const item of collaborators ?? []) collaboratorMap.set(item.campaign_id, [...(collaboratorMap.get(item.campaign_id) ?? []), { userId: item.user_id, username: names.get(item.user_id) ?? "usuario", role: "reader" }]);
     const { data: secrets } = await supabase.from("campaign_secrets").select("campaign_id,secret_word_encrypted").in("campaign_id", ids);
     for (const item of secrets ?? []) secretMap.set(item.campaign_id, decryptPrivateValue(item.secret_word_encrypted));
   }
@@ -38,8 +38,8 @@ export async function GET() {
     const access = row.created_by === user.id
       ? { role: "owner" as const, canManage: true }
       : membership
-        ? { role: membership.role, canManage: membership.role === "admin" }
-        : { role: "admin" as const, canManage: true };
+        ? { role: "reader" as const, canManage: false }
+        : { role: "reader" as const, canManage: false };
     return campaignJson(row, managers, access, secretMap.get(row.id) ?? "");
   }) });
 }
@@ -56,6 +56,7 @@ export async function POST(request: Request) {
     const startsAt = String(form.get("date") ?? "");
     const endsAt = String(form.get("endDate") ?? "");
     const city = String(form.get("city") ?? "").trim().slice(0, 180);
+    const intent = form.get("intent") === "submit" ? "submit" : "draft";
     const secretWord = String(form.get("secretWord") ?? "").trim();
     if (!name || !description || !startsAt || !endsAt || !city || !(artwork instanceof File) || !artwork.size) return NextResponse.json({ error: "Completa los campos obligatorios." }, { status: 400 });
     let optimizedArtwork: Buffer;
@@ -94,7 +95,7 @@ export async function POST(request: Request) {
       qr_enabled: form.get("distributionQr") === "on",
       secret_word_hash: secretWord ? hashValue(secretWord) : null,
       review_status: "pending",
-      submitted_at: new Date().toISOString(),
+      submitted_at: intent === "submit" ? new Date().toISOString() : null,
       created_by: user.id,
     }).select(campaignColumns).single();
 

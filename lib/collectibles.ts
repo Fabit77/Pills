@@ -3,18 +3,21 @@ import { createHash, randomBytes } from "node:crypto";
 export const hashValue = (value: string) => createHash("sha256").update(value.trim().toLowerCase()).digest("hex");
 export const createPublicToken = () => randomBytes(24).toString("base64url");
 
-type CampaignManager = { userId: string; username: string; role: "admin" | "reader" };
-type CampaignAccess = { role: "owner" | "admin" | "reader"; canManage: boolean };
+type CampaignManager = { userId: string; username: string; role: "reader" };
+type CampaignAccess = { role: "owner" | "reader"; canManage: boolean };
 
 export function campaignJson(row: Record<string, unknown>, collaborators: CampaignManager[] = [], access: CampaignAccess = { role: "owner", canManage: true }, secretWord = "") {
   const startsAt = typeof row.starts_at === "string" ? row.starts_at : null;
   const endsAt = typeof row.ends_at === "string" ? row.ends_at : null;
-  const reviewStatus = String(row.review_status ?? "pending");
+  const submittedAt = typeof row.submitted_at === "string" ? row.submitted_at : null;
+  const reviewStatus = submittedAt ? String(row.review_status ?? "pending") : "draft";
   const isPaused = Boolean(row.is_paused);
   const now = Date.now();
   const startTime = startsAt ? new Date(startsAt).getTime() : 0;
   const endTime = endsAt ? new Date(endsAt).getTime() : Number.POSITIVE_INFINITY;
-  const status = reviewStatus === "rejected"
+  const status = reviewStatus === "draft"
+    ? "Borrador"
+    : reviewStatus === "rejected"
     ? "Rechazado"
     : reviewStatus === "pending"
       ? "Pendiente de aprobación"
@@ -34,6 +37,7 @@ export function campaignJson(row: Record<string, unknown>, collaborators: Campai
     venue: row.venue ?? "Por confirmar",
     startsAt,
     endsAt,
+    eventUrl: row.event_url ?? "",
     total: row.supply ?? 0,
     claimed: row.claimed_count ?? 0,
     status,
@@ -49,6 +53,7 @@ export function campaignJson(row: Record<string, unknown>, collaborators: Campai
     accessRole: access.role,
     canManage: access.canManage,
     secretWord,
+    submittedAt,
     createdAt: row.created_at,
   };
 }
