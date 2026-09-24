@@ -42,8 +42,9 @@ export async function POST(request: Request) {
     const description = String(form.get("description") ?? "").trim().slice(0, 1500);
     const startsAt = String(form.get("date") ?? "");
     const endsAt = String(form.get("endDate") ?? "");
+    const city = String(form.get("city") ?? "").trim().slice(0, 180);
     const secretWord = String(form.get("secretWord") ?? "").trim();
-    if (!name || !description || !startsAt || !endsAt || !(artwork instanceof File) || !artwork.size) return NextResponse.json({ error: "Completa los campos obligatorios." }, { status: 400 });
+    if (!name || !description || !startsAt || !endsAt || !city || !(artwork instanceof File) || !artwork.size) return NextResponse.json({ error: "Completa los campos obligatorios." }, { status: 400 });
     let optimizedArtwork: Buffer;
     try { optimizedArtwork = await optimizeArtwork(artwork); }
     catch (error) { return NextResponse.json({ error: error instanceof ArtworkError ? error.message : "No pudimos procesar la imagen." }, { status: 400 }); }
@@ -67,14 +68,14 @@ export async function POST(request: Request) {
       organization_id: membership.organization_id,
       name,
       description,
-      event_type: String(form.get("type") ?? "Evento").slice(0, 80),
-      venue: String(form.get("location") ?? "").trim().slice(0, 180) || null,
+      event_type: "Experiencia",
+      venue: city,
       starts_at: `${startsAt}T00:00:00`,
       ends_at: `${endsAt}T23:59:59`,
       event_url: String(form.get("eventUrl") ?? "").trim().slice(0, 500) || null,
-      tags: String(form.get("tags") ?? "").split(",").map((tag) => tag.trim()).filter(Boolean).slice(0, 12),
-      supply: Math.max(1, Math.min(Number(form.get("supply") ?? 5000), 1000000)),
-      audience: String(form.get("audience") ?? "Asistentes").slice(0, 80),
+      tags: [],
+      supply: Math.max(1, Math.min(Number(form.get("supply")) || 100, 100)),
+      audience: "Cualquier persona",
       status: "draft",
       artwork_url: publicArtwork.publicUrl,
       qr_enabled: form.get("distributionQr") === "on",
@@ -89,13 +90,25 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No pudimos guardar el coleccionable." }, { status: 500 });
     }
 
-    const collaboratorUsername = String(form.get("collaborator") ?? "").trim().toLowerCase().replace(/^@/, "");
-    if (collaboratorUsername) {
-      const { data: collaborator } = await supabase.from("public_usernames").select("user_id").eq("username", collaboratorUsername).maybeSingle();
-      if (collaborator?.user_id && collaborator.user_id !== user.id) await supabase.from("campaign_collaborators").insert({ campaign_id: campaign.id, user_id: collaborator.user_id, added_by: user.id });
+    const rawEntities = String(form.get("entities") ?? "[]");
+    let selectedEntities: Array<{ entity_type: "artist" | "organization"; entity_id: string; display_name: string }> = [];
+    try {
+      const parsed = JSON.parse(rawEntities);
+      if (Array.isArray(parsed)) selectedEntities = parsed.filter((item) =>
+        (item?.entity_type === "artist" || item?.entity_type === "organization") &&
+        typeof item?.entity_id === "string" && typeof item?.display_name === "string"
+      ).slice(0, 20);
+    } catch { /* Invalid optional attribution input is ignored. */ }
+    if (selectedEntities.length) {
+      const { error: attributionError } = await supabase.rpc("add_campaign_attributions", { target_campaign_id: campaign.id, requested_entities: selectedEntities });
+      if (attributionError) {
+        await supabase.from("campaigns").delete().eq("id", campaign.id);
+        await supabase.storage.from("collectible-artwork").remove([filePath]);
+        return NextResponse.json({ error: "No pudimos asociar los artistas u organizaciones." }, { status: 500 });
+      }
     }
 
-    return NextResponse.json({ collectible: campaignJson(campaign, collaboratorUsername ? [collaboratorUsername] : []) }, { status: 201 });
+    return NextResponse.json({ collectible: campaignJson(campaign, []) }, { status: 201 });
   } catch {
     return NextResponse.json({ error: "No pudimos guardar el coleccionable." }, { status: 500 });
   }
