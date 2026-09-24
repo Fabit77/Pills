@@ -23,7 +23,7 @@ export async function GET(request: Request) {
       provider: "google",
       options: {
         redirectTo: `${origin}/auth/callback?next=/onboarding`,
-        queryParams: { access_type: "offline", prompt: "consent" },
+        queryParams: { access_type: "offline", prompt: "select_account" },
       },
     });
     if (error || !data.url) throw error ?? new Error("No OAuth URL");
