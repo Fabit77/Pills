@@ -11,6 +11,7 @@ export function ArtworkCropper({ file, onCancel, onApply }: { file: File; onCanc
   const [image, setImage] = useState<HTMLImageElement | null>(null);
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
     const url = URL.createObjectURL(file);
@@ -20,16 +21,18 @@ export function ArtworkCropper({ file, onCancel, onApply }: { file: File; onCanc
     return () => URL.revokeObjectURL(url);
   }, [file]);
 
-  const drawing = useCallback(() => {
+  const clampOffset = useCallback((candidate: { x: number; y: number }, zoomValue = zoom) => {
     if (!image) return null;
     const baseScale = Math.max(SIZE / image.naturalWidth, SIZE / image.naturalHeight);
-    const scale = baseScale * zoom;
+    const scale = baseScale * zoomValue;
     const width = image.naturalWidth * scale;
     const height = image.naturalHeight * scale;
     const maxX = Math.max(0, (width - SIZE) / 2);
     const maxY = Math.max(0, (height - SIZE) / 2);
-    return { width, height, x: Math.max(-maxX, Math.min(maxX, offset.x)), y: Math.max(-maxY, Math.min(maxY, offset.y)) };
-  }, [image, offset, zoom]);
+    return { width, height, x: Math.max(-maxX, Math.min(maxX, candidate.x)), y: Math.max(-maxY, Math.min(maxY, candidate.y)) };
+  }, [image, zoom]);
+
+  const drawing = useCallback(() => clampOffset(offset), [clampOffset, offset]);
 
   useEffect(() => {
     const canvas = canvasRef.current; const values = drawing();
@@ -42,9 +45,29 @@ export function ArtworkCropper({ file, onCancel, onApply }: { file: File; onCanc
 
   function pointerMove(event: React.PointerEvent<HTMLCanvasElement>) {
     if (!dragRef.current || !canvasRef.current) return;
+    event.preventDefault();
     const ratio = SIZE / canvasRef.current.clientWidth;
-    setOffset((current) => ({ x: current.x + (event.clientX - dragRef.current!.x) * ratio, y: current.y + (event.clientY - dragRef.current!.y) * ratio }));
+    const deltaX = (event.clientX - dragRef.current.x) * ratio;
+    const deltaY = (event.clientY - dragRef.current.y) * ratio;
+    setOffset((current) => {
+      const next = clampOffset({ x: current.x + deltaX, y: current.y + deltaY });
+      return next ? { x: next.x, y: next.y } : current;
+    });
     dragRef.current = { x: event.clientX, y: event.clientY };
+  }
+
+  function finishDragging(event: React.PointerEvent<HTMLCanvasElement>) {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    dragRef.current = null;
+    setDragging(false);
+  }
+
+  function changeZoom(value: number) {
+    setZoom(value);
+    setOffset((current) => {
+      const next = clampOffset(current, value);
+      return next ? { x: next.x, y: next.y } : current;
+    });
   }
 
   function apply() {
@@ -55,5 +78,5 @@ export function ArtworkCropper({ file, onCancel, onApply }: { file: File; onCanc
     }, "image/webp", 0.92);
   }
 
-  return <div className="crop-editor-backdrop"><section className="crop-editor" role="dialog" aria-modal="true" aria-label="Ajustar imagen"><header><div><span>ARTE DE LA PILL</span><h3>Ajusta tu insignia</h3><p>Arrastra la imagen y usa el zoom hasta encuadrarla.</p></div><button type="button" onClick={onCancel} aria-label="Cerrar"><X /></button></header><div className="crop-canvas-shell"><canvas ref={canvasRef} width={SIZE} height={SIZE} onPointerDown={(event) => { event.currentTarget.setPointerCapture(event.pointerId); dragRef.current = { x: event.clientX, y: event.clientY }; }} onPointerMove={pointerMove} onPointerUp={() => { dragRef.current = null; }} onPointerCancel={() => { dragRef.current = null; }} /></div><div className="crop-zoom"><Minus /><input aria-label="Zoom" type="range" min="1" max="3" step="0.01" value={zoom} onChange={(event) => setZoom(Number(event.target.value))} /><Plus /></div><footer><button type="button" className="secondary-button" onClick={onCancel}>Cancelar</button><button type="button" className="primary-button" onClick={apply}>Usar esta imagen</button></footer></section></div>;
+  return <div className="crop-editor-backdrop"><section className="crop-editor" role="dialog" aria-modal="true" aria-label="Ajustar imagen"><header><div><span>ARTE DE LA PILL</span><h3>Ajusta tu insignia</h3><p>Haz zoom y arrastra la imagen con el mouse o el dedo para encuadrarla.</p></div><button type="button" onClick={onCancel} aria-label="Cerrar"><X /></button></header><div className={`crop-canvas-shell ${dragging ? "is-dragging" : ""}`}><canvas ref={canvasRef} width={SIZE} height={SIZE} onPointerDown={(event) => { if (event.pointerType === "mouse" && event.button !== 0) return; event.preventDefault(); event.currentTarget.setPointerCapture(event.pointerId); dragRef.current = { x: event.clientX, y: event.clientY }; setDragging(true); }} onPointerMove={pointerMove} onPointerUp={finishDragging} onPointerCancel={finishDragging} /></div><div className="crop-zoom"><Minus /><input aria-label="Zoom" type="range" min="1" max="4" step="0.01" value={zoom} onChange={(event) => changeZoom(Number(event.target.value))} /><Plus /></div><p className="crop-move-hint">Zoom {Math.round(zoom * 100)}% · Arrastra directamente sobre la imagen para moverla</p><footer><button type="button" className="secondary-button" onClick={onCancel}>Cancelar</button><button type="button" className="primary-button" onClick={apply}>Usar esta imagen</button></footer></section></div>;
 }
