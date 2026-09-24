@@ -69,14 +69,17 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const description = String(form.get("description") ?? "").trim().slice(0, 1500);
   const startsAt = String(form.get("date") ?? "");
   const endsAt = String(form.get("endDate") ?? "");
+  const startsAtIso = String(form.get("startsAtIso") ?? "") || (startsAt ? `${startsAt}T${String(form.get("startTime") ?? "00:00")}:00Z` : "");
+  const endsAtIso = String(form.get("endsAtIso") ?? "") || (endsAt ? `${endsAt}T${String(form.get("endTime") ?? "23:59")}:00Z` : "");
   const city = String(form.get("city") ?? "").trim().slice(0, 180);
   const eventUrl = String(form.get("eventUrl") ?? "").trim().slice(0, 500);
   const supply = Math.max(1, Math.min(Number(form.get("supply")) || 100, 100));
   const qrEnabled = form.get("distributionQr") === "on";
   const secretEnabled = form.get("distributionSecret") === "on";
   const secretWord = String(form.get("secretWord") ?? "").trim().slice(0, 60);
-  if (!name || !description || !startsAt || !endsAt || !city) return NextResponse.json({ error: "Completa los campos obligatorios." }, { status: 400 });
-  if (new Date(endsAt) <= new Date(startsAt)) return NextResponse.json({ error: "La fecha de término debe ser posterior." }, { status: 400 });
+  if (!name || !description || !startsAtIso || !city) return NextResponse.json({ error: "Completa los campos obligatorios." }, { status: 400 });
+  if (Number.isNaN(new Date(startsAtIso).getTime()) || (endsAtIso && Number.isNaN(new Date(endsAtIso).getTime()))) return NextResponse.json({ error: "Revisa la fecha y la hora." }, { status: 400 });
+  if (endsAtIso && new Date(endsAtIso) <= new Date(startsAtIso)) return NextResponse.json({ error: "La fecha y hora de término deben ser posteriores al inicio." }, { status: 400 });
   if (!qrEnabled && !secretEnabled) return NextResponse.json({ error: "Selecciona al menos un método de distribución." }, { status: 400 });
   if (secretEnabled && !secretWord) return NextResponse.json({ error: "Escribe la palabra secreta." }, { status: 400 });
 
@@ -95,7 +98,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   }
 
   const { error } = await supabase.from("campaigns").update({
-    name, description, venue: city, starts_at: `${startsAt}T00:00:00`, ends_at: `${endsAt}T23:59:59`,
+    name, description, venue: city, starts_at: startsAtIso, ends_at: endsAtIso || null,
     event_url: eventUrl || null, supply, qr_enabled: qrEnabled, secret_word_hash: secretEnabled ? hashValue(secretWord) : null, artwork_url: artworkUrl,
   }).eq("id", id);
   if (error) {

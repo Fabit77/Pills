@@ -55,14 +55,17 @@ export async function POST(request: Request) {
     const description = String(form.get("description") ?? "").trim().slice(0, 1500);
     const startsAt = String(form.get("date") ?? "");
     const endsAt = String(form.get("endDate") ?? "");
+    const startsAtIso = String(form.get("startsAtIso") ?? "") || (startsAt ? `${startsAt}T${String(form.get("startTime") ?? "00:00")}:00Z` : "");
+    const endsAtIso = String(form.get("endsAtIso") ?? "") || (endsAt ? `${endsAt}T${String(form.get("endTime") ?? "23:59")}:00Z` : "");
     const city = String(form.get("city") ?? "").trim().slice(0, 180);
     const intent = form.get("intent") === "submit" ? "submit" : "draft";
     const secretWord = String(form.get("secretWord") ?? "").trim();
-    if (!name || !description || !startsAt || !endsAt || !city || !(artwork instanceof File) || !artwork.size) return NextResponse.json({ error: "Completa los campos obligatorios." }, { status: 400 });
+    if (!name || !description || !startsAtIso || !city || !(artwork instanceof File) || !artwork.size) return NextResponse.json({ error: "Completa los campos obligatorios." }, { status: 400 });
     let optimizedArtwork: Buffer;
     try { optimizedArtwork = await optimizeArtwork(artwork); }
     catch (error) { return NextResponse.json({ error: error instanceof ArtworkError ? error.message : "No pudimos procesar la imagen." }, { status: 400 }); }
-    if (new Date(endsAt) <= new Date(startsAt)) return NextResponse.json({ error: "La fecha de término debe ser posterior." }, { status: 400 });
+    if (Number.isNaN(new Date(startsAtIso).getTime()) || (endsAtIso && Number.isNaN(new Date(endsAtIso).getTime()))) return NextResponse.json({ error: "Revisa la fecha y la hora." }, { status: 400 });
+    if (endsAtIso && new Date(endsAtIso) <= new Date(startsAtIso)) return NextResponse.json({ error: "La fecha y hora de término deben ser posteriores al inicio." }, { status: 400 });
 
     let { data: membership } = await supabase.from("organization_members").select("organization_id").eq("user_id", user.id).limit(1).maybeSingle();
     if (!membership) {
@@ -84,8 +87,8 @@ export async function POST(request: Request) {
       description,
       event_type: "Experiencia",
       venue: city,
-      starts_at: `${startsAt}T00:00:00`,
-      ends_at: `${endsAt}T23:59:59`,
+      starts_at: startsAtIso,
+      ends_at: endsAtIso || null,
       event_url: String(form.get("eventUrl") ?? "").trim().slice(0, 500) || null,
       tags: [],
       supply: Math.max(1, Math.min(Number(form.get("supply")) || 100, 100)),
