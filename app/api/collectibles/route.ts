@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { campaignJson, hashValue } from "@/lib/collectibles";
 import { ArtworkError, optimizeArtwork } from "@/lib/artwork";
 
-const campaignColumns = "id,name,description,event_type,venue,starts_at,ends_at,supply,status,artwork_url,qr_enabled,qr_token,secret_word_hash,review_status,rejection_reason,claimed_count,first_claimed_at,created_at";
+const campaignColumns = "id,name,description,event_type,venue,starts_at,ends_at,supply,status,artwork_url,qr_enabled,qr_token,secret_word_hash,review_status,rejection_reason,claimed_count,first_claimed_at,is_paused,created_at";
 
 async function requireUser() {
   const supabase = await createClient();
