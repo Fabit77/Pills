@@ -4,7 +4,7 @@ import { campaignJson, hashValue } from "@/lib/collectibles";
 import { ArtworkError, optimizeArtwork } from "@/lib/artwork";
 import { decryptPrivateValue, encryptPrivateValue } from "@/lib/private-values";
 
-const campaignColumns = "id,name,description,event_type,venue,starts_at,ends_at,event_url,supply,status,artwork_url,qr_enabled,qr_token,secret_word_hash,review_status,submitted_at,rejection_reason,claimed_count,first_claimed_at,is_paused,created_by,created_at";
+const campaignColumns = "id,name,description,event_type,venue,starts_at,ends_at,event_url,supply,status,artwork_url,qr_enabled,qr_token,secret_word_hash,public_slug,review_status,submitted_at,rejection_reason,claimed_count,first_claimed_at,is_paused,created_by,created_at";
 
 async function requireUser() {
   const supabase = await createClient();
@@ -60,7 +60,9 @@ export async function POST(request: Request) {
     const city = String(form.get("city") ?? "").trim().slice(0, 180);
     const intent = form.get("intent") === "submit" ? "submit" : "draft";
     const secretWord = String(form.get("secretWord") ?? "").trim();
+    const publicSlug = String(form.get("publicSlug") ?? "").trim().toLowerCase();
     if (!name || !description || !startsAtIso || !city || !(artwork instanceof File) || !artwork.size) return NextResponse.json({ error: "Completa los campos obligatorios." }, { status: 400 });
+    if (!/^[a-z0-9]+-[a-z0-9]+-[a-z0-9]+$/.test(publicSlug)) return NextResponse.json({ error: "El enlace debe tener exactamente tres palabras separadas por guiones." }, { status: 400 });
     let optimizedArtwork: Buffer;
     try { optimizedArtwork = await optimizeArtwork(artwork); }
     catch (error) { return NextResponse.json({ error: error instanceof ArtworkError ? error.message : "No pudimos procesar la imagen." }, { status: 400 }); }
@@ -97,6 +99,7 @@ export async function POST(request: Request) {
       artwork_url: publicArtwork.publicUrl,
       qr_enabled: form.get("distributionQr") === "on",
       secret_word_hash: secretWord ? hashValue(secretWord) : null,
+      public_slug: publicSlug,
       review_status: "pending",
       submitted_at: intent === "submit" ? new Date().toISOString() : null,
       created_by: user.id,
@@ -104,6 +107,7 @@ export async function POST(request: Request) {
 
     if (error) {
       await supabase.storage.from("collectible-artwork").remove([filePath]);
+      if (error.code === "23505") return NextResponse.json({ error: "Este enlace ya está en uso. Elige otras tres palabras." }, { status: 409 });
       return NextResponse.json({ error: "No pudimos guardar el coleccionable." }, { status: 500 });
     }
 

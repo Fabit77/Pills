@@ -46,6 +46,7 @@ export function campaignJson(row: Record<string, unknown>, collaborators: Campai
     imageUrl: row.artwork_url ?? "",
     qrEnabled: Boolean(row.qr_enabled),
     qrToken: reviewStatus === "approved" ? row.qr_token ?? null : null,
+    publicSlug: row.public_slug ?? "",
     secretEnabled: Boolean(row.secret_word_hash),
     editable: Number(row.claimed_count ?? 0) === 0 && !row.first_claimed_at,
     rejectionReason: row.rejection_reason ?? "",
