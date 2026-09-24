@@ -145,7 +145,11 @@ function CreateCampaign({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
   const [city, setCity] = useState(""); const [cityOpen, setCityOpen] = useState(false);
   const [entityQuery, setEntityQuery] = useState(""); const [entityOptions, setEntityOptions] = useState<PlatformEntity[]>([]); const [selectedEntities, setSelectedEntities] = useState<PlatformEntity[]>([]); const [searchingEntities, setSearchingEntities] = useState(false);
   const normalize = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  const cityOptions = city.trim().length > 0 ? CITY_OPTIONS.filter((item) => normalize(item).includes(normalize(city.trim()))).slice(0, 7) : [];
+  const cityQuery = normalize(city.trim());
+  const cityOptions = cityQuery ? CITY_OPTIONS.filter((item) => normalize(item).includes(cityQuery)).sort((first, second) => {
+    const score = (item: string) => { const normalized = normalize(item); if (normalized.startsWith(cityQuery)) return 0; if (normalized.split(/[\s,]+/).some((word) => word.startsWith(cityQuery))) return 1; return 2; };
+    return score(first) - score(second) || first.localeCompare(second, "es");
+  }).slice(0, 8) : [];
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
   useEffect(() => {
     if (entityQuery.trim().length < 2) return;
