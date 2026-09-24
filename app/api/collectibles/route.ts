@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { campaignJson, hashValue } from "@/lib/collectibles";
 import { ArtworkError, optimizeArtwork } from "@/lib/artwork";
 import { decryptPrivateValue, encryptPrivateValue } from "@/lib/private-values";
+import { normalizeWebsiteUrl } from "@/lib/website";
 
 const campaignColumns = "id,name,description,event_type,venue,starts_at,ends_at,event_url,supply,status,artwork_url,qr_enabled,qr_token,secret_word_hash,public_slug,review_status,submitted_at,rejection_reason,claimed_count,first_claimed_at,is_paused,created_by,created_at";
 
@@ -61,8 +62,11 @@ export async function POST(request: Request) {
     const intent = form.get("intent") === "submit" ? "submit" : "draft";
     const secretWord = String(form.get("secretWord") ?? "").trim();
     const publicSlug = String(form.get("publicSlug") ?? "").trim().toLowerCase();
+    const rawEventUrl = String(form.get("eventUrl") ?? "").trim().slice(0, 500);
+    const eventUrl = normalizeWebsiteUrl(rawEventUrl);
     if (!name || !description || !startsAtIso || !city || !(artwork instanceof File) || !artwork.size) return NextResponse.json({ error: "Completa los campos obligatorios." }, { status: 400 });
     if (!/^[a-z0-9]+-[a-z0-9]+-[a-z0-9]+$/.test(publicSlug)) return NextResponse.json({ error: "El enlace debe tener exactamente tres palabras separadas por guiones." }, { status: 400 });
+    if (rawEventUrl && !eventUrl) return NextResponse.json({ error: "Escribe un sitio web válido, por ejemplo asadao.io." }, { status: 400 });
     let optimizedArtwork: Buffer;
     try { optimizedArtwork = await optimizeArtwork(artwork); }
     catch (error) { return NextResponse.json({ error: error instanceof ArtworkError ? error.message : "No pudimos procesar la imagen." }, { status: 400 }); }
@@ -91,7 +95,7 @@ export async function POST(request: Request) {
       venue: city,
       starts_at: startsAtIso,
       ends_at: endsAtIso || null,
-      event_url: String(form.get("eventUrl") ?? "").trim().slice(0, 500) || null,
+      event_url: eventUrl || null,
       tags: [],
       supply: Math.max(1, Math.min(Number(form.get("supply")) || 100, 100)),
       audience: "Cualquier persona",
