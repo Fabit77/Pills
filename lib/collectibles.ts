@@ -3,7 +3,10 @@ import { createHash, randomBytes } from "node:crypto";
 export const hashValue = (value: string) => createHash("sha256").update(value.trim().toLowerCase()).digest("hex");
 export const createPublicToken = () => randomBytes(24).toString("base64url");
 
-export function campaignJson(row: Record<string, unknown>, collaborators: string[] = []) {
+type CampaignManager = { userId: string; username: string; role: "admin" | "reader" };
+type CampaignAccess = { role: "owner" | "admin" | "reader"; canManage: boolean };
+
+export function campaignJson(row: Record<string, unknown>, collaborators: CampaignManager[] = [], access: CampaignAccess = { role: "owner", canManage: true }, secretWord = "") {
   const startsAt = typeof row.starts_at === "string" ? row.starts_at : null;
   const endsAt = typeof row.ends_at === "string" ? row.ends_at : null;
   const reviewStatus = String(row.review_status ?? "pending");
@@ -43,6 +46,9 @@ export function campaignJson(row: Record<string, unknown>, collaborators: string
     editable: Number(row.claimed_count ?? 0) === 0 && !row.first_claimed_at,
     rejectionReason: row.rejection_reason ?? "",
     collaborators,
+    accessRole: access.role,
+    canManage: access.canManage,
+    secretWord,
     createdAt: row.created_at,
   };
 }

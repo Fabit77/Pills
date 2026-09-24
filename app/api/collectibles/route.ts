@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { campaignJson, hashValue } from "@/lib/collectibles";
 import { ArtworkError, optimizeArtwork } from "@/lib/artwork";
+import { decryptPrivateValue, encryptPrivateValue } from "@/lib/private-values";
 
-const campaignColumns = "id,name,description,event_type,venue,starts_at,ends_at,supply,status,artwork_url,qr_enabled,qr_token,secret_word_hash,review_status,rejection_reason,claimed_count,first_claimed_at,is_paused,created_at";
+const campaignColumns = "id,name,description,event_type,venue,starts_at,ends_at,supply,status,artwork_url,qr_enabled,qr_token,secret_word_hash,review_status,rejection_reason,claimed_count,first_claimed_at,is_paused,created_by,created_at";
 
 async function requireUser() {
   const supabase = await createClient();
@@ -19,16 +20,28 @@ export async function GET() {
   if (error) return NextResponse.json({ error: "No pudimos cargar tus coleccionables." }, { status: 500 });
 
   const ids = (data ?? []).map((row) => row.id);
-  const collaboratorMap = new Map<string, string[]>();
+  const collaboratorMap = new Map<string, Array<{ userId: string; username: string; role: "admin" | "reader" }>>();
+  const secretMap = new Map<string, string>();
   if (ids.length) {
-    const { data: collaborators } = await supabase.from("campaign_collaborators").select("campaign_id,user_id").in("campaign_id", ids);
+    const { data: collaborators } = await supabase.from("campaign_collaborators").select("campaign_id,user_id,role").in("campaign_id", ids);
     const userIds = [...new Set((collaborators ?? []).map((item) => item.user_id))];
     const { data: usernames } = userIds.length ? await supabase.from("public_usernames").select("user_id,username").in("user_id", userIds) : { data: [] };
     const names = new Map((usernames ?? []).map((item) => [item.user_id, item.username]));
-    for (const item of collaborators ?? []) collaboratorMap.set(item.campaign_id, [...(collaboratorMap.get(item.campaign_id) ?? []), names.get(item.user_id) ?? "colaborador"]);
+    for (const item of collaborators ?? []) collaboratorMap.set(item.campaign_id, [...(collaboratorMap.get(item.campaign_id) ?? []), { userId: item.user_id, username: names.get(item.user_id) ?? "usuario", role: item.role === "reader" ? "reader" : "admin" }]);
+    const { data: secrets } = await supabase.from("campaign_secrets").select("campaign_id,secret_word_encrypted").in("campaign_id", ids);
+    for (const item of secrets ?? []) secretMap.set(item.campaign_id, decryptPrivateValue(item.secret_word_encrypted));
   }
 
-  return NextResponse.json({ collectibles: (data ?? []).map((row) => campaignJson(row, collaboratorMap.get(row.id) ?? [])) });
+  return NextResponse.json({ collectibles: (data ?? []).map((row) => {
+    const managers = collaboratorMap.get(row.id) ?? [];
+    const membership = managers.find((item) => item.userId === user.id);
+    const access = row.created_by === user.id
+      ? { role: "owner" as const, canManage: true }
+      : membership
+        ? { role: membership.role, canManage: membership.role === "admin" }
+        : { role: "admin" as const, canManage: true };
+    return campaignJson(row, managers, access, secretMap.get(row.id) ?? "");
+  }) });
 }
 
 export async function POST(request: Request) {
@@ -102,13 +115,22 @@ export async function POST(request: Request) {
     if (selectedEntities.length) {
       const { error: attributionError } = await supabase.rpc("add_campaign_attributions", { target_campaign_id: campaign.id, requested_entities: selectedEntities });
       if (attributionError) {
-        await supabase.from("campaigns").delete().eq("id", campaign.id);
+        await supabase.rpc("delete_own_draft_collectible", { target_campaign_id: campaign.id });
         await supabase.storage.from("collectible-artwork").remove([filePath]);
         return NextResponse.json({ error: "No pudimos asociar los artistas u organizaciones." }, { status: 500 });
       }
     }
 
-    return NextResponse.json({ collectible: campaignJson(campaign, []) }, { status: 201 });
+    if (secretWord) {
+      const { error: privateSecretError } = await supabase.from("campaign_secrets").insert({ campaign_id: campaign.id, secret_word_encrypted: encryptPrivateValue(secretWord.slice(0, 60)) });
+      if (privateSecretError) {
+        await supabase.rpc("delete_own_draft_collectible", { target_campaign_id: campaign.id });
+        await supabase.storage.from("collectible-artwork").remove([filePath]);
+        return NextResponse.json({ error: "No pudimos guardar la frase secreta de forma privada." }, { status: 500 });
+      }
+    }
+
+    return NextResponse.json({ collectible: campaignJson(campaign, [], { role: "owner", canManage: true }, secretWord) }, { status: 201 });
   } catch {
     return NextResponse.json({ error: "No pudimos guardar el coleccionable." }, { status: 500 });
   }
