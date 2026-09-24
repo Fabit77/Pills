@@ -27,7 +27,16 @@ export async function GET(request: Request) {
       },
     });
     if (error || !data.url) throw error ?? new Error("No OAuth URL");
-    return NextResponse.redirect(data.url);
+    const response = NextResponse.redirect(data.url);
+    response.cookies.set("pills_auth_surface", "creator", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 10,
+    });
+    response.headers.set("Cache-Control", "no-store");
+    return response;
   } catch {
     return NextResponse.redirect(new URL("/login?error=google_unavailable", request.url));
   }

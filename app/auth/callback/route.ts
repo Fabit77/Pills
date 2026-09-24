@@ -18,7 +18,10 @@ export async function GET(request: Request) {
         .eq("user_id", data.user.id)
         .maybeSingle();
       const destination = publicProfile?.username ? (next === "/onboarding" ? "/studio" : next) : "/onboarding";
-      return NextResponse.redirect(`${origin}${destination}`);
+      const response = NextResponse.redirect(`${origin}${destination}`);
+      response.cookies.delete("pills_auth_surface");
+      response.headers.set("Cache-Control", "no-store");
+      return response;
     }
   }
 
