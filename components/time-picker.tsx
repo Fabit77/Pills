@@ -1,7 +1,8 @@
 "use client";
 
 import { Clock3, X } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 type TimePickerProps = {
   value: string;
@@ -91,14 +92,18 @@ function TimeColumn<T extends string | number>({
 
 export function TimePicker({ value, onChange, name, ariaLabel = "Seleccionar hora" }: TimePickerProps) {
   const [open, setOpen] = useState(false);
+  const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
   const id = useId();
   const selected = parseTime(value);
 
   useEffect(() => {
     if (!open) return;
     function closeOnOutsideClick(event: PointerEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+      const target = event.target as Node;
+      if (!rootRef.current?.contains(target) && !popoverRef.current?.contains(target)) setOpen(false);
     }
     function closeOnEscape(event: KeyboardEvent) {
       if (event.key === "Escape") setOpen(false);
@@ -111,6 +116,41 @@ export function TimePicker({ value, onChange, name, ariaLabel = "Seleccionar hor
     };
   }, [open]);
 
+  useLayoutEffect(() => {
+    if (!open) return;
+    function placePopover() {
+      const trigger = triggerRef.current;
+      const popover = popoverRef.current;
+      if (!trigger || !popover) return;
+      const triggerRect = trigger.getBoundingClientRect();
+      const width = popover.offsetWidth;
+      const height = popover.offsetHeight;
+      const margin = 16;
+      const gap = 12;
+      let left: number;
+      let top: number;
+
+      if (window.innerWidth <= 760) {
+        left = Math.max(margin, (window.innerWidth - width) / 2);
+        top = Math.max(margin, (window.innerHeight - height) / 2);
+      } else {
+        left = triggerRect.right + gap;
+        if (left + width > window.innerWidth - margin) left = Math.max(margin, triggerRect.left - width - gap);
+        top = triggerRect.top + triggerRect.height / 2 - height / 2;
+        top = Math.min(Math.max(margin, top), Math.max(margin, window.innerHeight - height - margin));
+      }
+      setPosition({ top, left });
+    }
+
+    placePopover();
+    window.addEventListener("resize", placePopover);
+    window.addEventListener("scroll", placePopover, true);
+    return () => {
+      window.removeEventListener("resize", placePopover);
+      window.removeEventListener("scroll", placePopover, true);
+    };
+  }, [open]);
+
   function update(next: Partial<typeof selected>) {
     const time = { ...selected, ...next };
     onChange(toTime(time.hour, time.minute, time.period));
@@ -119,6 +159,7 @@ export function TimePicker({ value, onChange, name, ariaLabel = "Seleccionar hor
   return <div className="time-picker" ref={rootRef}>
     {name && <input type="hidden" name={name} value={value} />}
     <button
+      ref={triggerRef}
       type="button"
       className={`time-picker-trigger ${open ? "open" : ""}`}
       aria-label={ariaLabel}
@@ -130,7 +171,7 @@ export function TimePicker({ value, onChange, name, ariaLabel = "Seleccionar hor
       <span>{String(selected.hour).padStart(2, "0")}:{String(selected.minute).padStart(2, "0")} <em>{selected.period}</em></span>
       <Clock3 aria-hidden="true" />
     </button>
-    {open && <div className="time-picker-popover" id={id} role="dialog" aria-label={ariaLabel}>
+    {open && createPortal(<div ref={popoverRef} className="time-picker-popover time-picker-floating" id={id} role="dialog" aria-label={ariaLabel} style={{ top: position?.top ?? 0, left: position?.left ?? 0, visibility: position ? "visible" : "hidden" }}>
       <header><div><strong>Elige una hora</strong><small>Desliza hacia arriba o abajo</small></div><button type="button" aria-label="Cerrar selector de hora" onClick={() => setOpen(false)}><X /></button></header>
       <div className="time-picker-wheels">
         <TimeColumn label="Hora" options={HOURS} value={selected.hour} format={(hour) => String(hour).padStart(2, "0")} onSelect={(hour) => update({ hour })} />
@@ -138,6 +179,6 @@ export function TimePicker({ value, onChange, name, ariaLabel = "Seleccionar hor
         <TimeColumn label="Periodo" options={PERIODS} value={selected.period} format={(period) => period} onSelect={(period) => update({ period })} />
       </div>
       <footer><span>El desplazamiento termina en el primer y último valor.</span><button type="button" onClick={() => setOpen(false)}>Listo</button></footer>
-    </div>}
+    </div>, document.body)}
   </div>;
 }
