@@ -60,6 +60,7 @@ export async function POST(request: Request) {
     const endsAtIso = String(form.get("endsAtIso") ?? "") || (endsAt ? `${endsAt}T${String(form.get("endTime") ?? "23:59")}:00Z` : "");
     const city = String(form.get("city") ?? "").trim().slice(0, 180);
     const intent = form.get("intent") === "submit" ? "submit" : "draft";
+    console.info("[collectibles:create] request received", { intent });
     const secretWord = String(form.get("secretWord") ?? "").trim();
     const publicSlug = String(form.get("publicSlug") ?? "").trim().toLowerCase();
     const rawEventUrl = String(form.get("eventUrl") ?? "").trim().slice(0, 500);
@@ -110,6 +111,7 @@ export async function POST(request: Request) {
     }).select(campaignColumns).single();
 
     if (error) {
+      console.error("[collectibles:create] campaign insert failed", { code: error.code, message: error.message });
       await supabase.storage.from("collectible-artwork").remove([filePath]);
       if (error.code === "23505") return NextResponse.json({ error: "Este enlace ya está en uso. Elige otras tres palabras." }, { status: 409 });
       return NextResponse.json({ error: "No pudimos guardar el coleccionable." }, { status: 500 });
@@ -127,6 +129,7 @@ export async function POST(request: Request) {
     if (selectedEntities.length) {
       const { error: attributionError } = await supabase.rpc("add_campaign_attributions", { target_campaign_id: campaign.id, requested_entities: selectedEntities });
       if (attributionError) {
+        console.error("[collectibles:create] attribution insert failed", { code: attributionError.code, message: attributionError.message });
         await supabase.rpc("delete_own_draft_collectible", { target_campaign_id: campaign.id });
         await supabase.storage.from("collectible-artwork").remove([filePath]);
         return NextResponse.json({ error: "No pudimos asociar los artistas u organizaciones." }, { status: 500 });
@@ -136,14 +139,17 @@ export async function POST(request: Request) {
     if (secretWord) {
       const { error: privateSecretError } = await supabase.from("campaign_secrets").insert({ campaign_id: campaign.id, secret_word_encrypted: encryptPrivateValue(secretWord.slice(0, 60)) });
       if (privateSecretError) {
+        console.error("[collectibles:create] private secret insert failed", { code: privateSecretError.code, message: privateSecretError.message });
         await supabase.rpc("delete_own_draft_collectible", { target_campaign_id: campaign.id });
         await supabase.storage.from("collectible-artwork").remove([filePath]);
         return NextResponse.json({ error: "No pudimos guardar la frase secreta de forma privada." }, { status: 500 });
       }
     }
 
+    console.info("[collectibles:create] completed", { campaignId: campaign.id, intent });
     return NextResponse.json({ collectible: campaignJson(campaign, [], { role: "owner", canManage: true }, secretWord) }, { status: 201 });
-  } catch {
+  } catch (error) {
+    console.error("[collectibles:create] unexpected failure", { error: error instanceof Error ? error.message : String(error) });
     return NextResponse.json({ error: "No pudimos guardar el coleccionable." }, { status: 500 });
   }
 }
