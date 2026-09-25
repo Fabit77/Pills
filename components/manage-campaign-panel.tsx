@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { ArrowRight, CalendarDays, Check, LockKeyhole, QrCode, ShieldCheck, Sparkles, Trash2, UserPlus, X } from "lucide-react";
+import { ArrowRight, CalendarDays, Check, LockKeyhole, QrCode, ShieldCheck, Sparkles, Trash2, UserPlus, Users, X } from "lucide-react";
 import QRCode from "qrcode";
 import { FormEvent, useEffect, useState } from "react";
 import { ArtworkCropper } from "@/components/artwork-cropper";
@@ -18,12 +18,15 @@ type Campaign = {
   rejectionReason: string; collaborators: Reader[]; accessRole: "owner" | "reader"; canManage: boolean; createdAt: string;
 };
 type AdminLink = { id: string; recipientLabel: string; tokenValue: string | null; redeemedAt: string | null; createdAt: string };
+type Collector = { claimId: string; userId: string; username: string | null; method: "qr" | "secret" | "admin_link"; claimedAt: string };
 
 const fansUrl = process.env.NEXT_PUBLIC_PILLSFANS_URL || "https://pills-fans-web.vercel.app";
 const formatDate = (value: string) => new Date(`${value}T12:00:00`).toLocaleDateString("es-CL", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase();
 const statusClass = (value: string) => value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s/g, "-");
 const localPart = (value: string | null, part: "date" | "time") => { if (!value) return ""; const date = new Date(value); const pad = (item: number) => String(item).padStart(2, "0"); return part === "date" ? `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` : `${pad(date.getHours())}:${pad(date.getMinutes())}`; };
 const localToday = () => { const date = new Date(); const pad = (value: number) => String(value).padStart(2, "0"); return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`; };
+const claimMethodLabel = (method: Collector["method"]) => method === "qr" ? "Código QR" : method === "secret" ? "Frase secreta" : "Enlace individual";
+const formatClaimDate = (value: string) => new Date(value).toLocaleString("es-CL", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
 function LiveArtwork({ imageUrl, title }: { imageUrl: string; title: string }) {
   const initials = title.split(" ").map((word) => word[0]).join("").slice(0, 3).toUpperCase();
@@ -54,6 +57,9 @@ export function ManageCampaignPanel({ campaign, onClose, onSaved, onDeleted }: {
   const [adminLinks, setAdminLinks] = useState<AdminLink[]>([]);
   const [recipientLabel, setRecipientLabel] = useState("");
   const [newClaimUrl, setNewClaimUrl] = useState("");
+  const [collectors, setCollectors] = useState<Collector[]>([]);
+  const [collectorsLoading, setCollectorsLoading] = useState(true);
+  const [collectorsError, setCollectorsError] = useState("");
   const isOwner = campaign.accessRole === "owner";
   const isDraft = campaign.reviewStatus === "draft";
   const canEditContent = isOwner && campaign.editable;
@@ -61,6 +67,15 @@ export function ManageCampaignPanel({ campaign, onClose, onSaved, onDeleted }: {
   useEffect(() => () => { if (artworkPreview && artworkPreview !== campaign.imageUrl) URL.revokeObjectURL(artworkPreview); }, [artworkPreview, campaign.imageUrl]);
   useEffect(() => { if (!campaign.publicSlug) return; void QRCode.toDataURL(`${fansUrl}/collect/${campaign.publicSlug}`, { width: 280, margin: 1, color: { dark: "#181816", light: "#ffffff" } }).then(setQr); }, [campaign.publicSlug]);
   useEffect(() => { if (campaign.reviewStatus !== "approved") return; fetch(`/api/collectibles/${campaign.id}/admin-links`, { cache: "no-store" }).then(async (response) => { const result = await response.json(); if (response.ok) setAdminLinks(result.links); }).catch(() => undefined); }, [campaign.id, campaign.reviewStatus]);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(`/api/collectibles/${campaign.id}/collectors`, { cache: "no-store", signal: controller.signal }).then(async (response) => {
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "No pudimos cargar las personas que coleccionaron esta Pill.");
+      setCollectors(result.collectors ?? []);
+    }).catch((cause) => { if (cause?.name !== "AbortError") setCollectorsError(cause instanceof Error ? cause.message : "No pudimos cargar las personas que coleccionaron esta Pill."); }).finally(() => { if (!controller.signal.aborted) setCollectorsLoading(false); });
+    return () => controller.abort();
+  }, [campaign.id]);
 
   function mergeSaved(result: Campaign) {
     onSaved({ ...campaign, ...result, collaborators: campaign.collaborators, accessRole: campaign.accessRole, canManage: campaign.canManage });
@@ -154,6 +169,7 @@ export function ManageCampaignPanel({ campaign, onClose, onSaved, onDeleted }: {
       {isOwner && <button className="primary-button" disabled={!canEditContent || saving}>{saving ? "Guardando…" : isDraft ? "Guardar borrador" : "Guardar cambios"}</button>}
     </form>
     {isOwner && <div className="lifecycle-actions">{isDraft && <button className="primary-button" disabled={saving} onClick={() => void changeLifecycle("submit")}>Enviar a Curaduría <ArrowRight /></button>}{(campaign.reviewStatus === "pending" || campaign.reviewStatus === "rejected") && <button className="secondary-button" disabled={saving} onClick={() => void changeLifecycle("withdraw")}>Volver a borrador</button>}</div>}
+    <div className="collector-box"><div className="collector-box-title"><span><Users /><strong>Personas que coleccionaron</strong></span><em>{collectorsLoading ? "—" : collectors.length}</em></div>{collectorsLoading ? <p>Cargando coleccionistas…</p> : collectorsError ? <p className="collector-error">{collectorsError}</p> : collectors.length ? <div className="collector-list">{collectors.map((collector) => <div key={collector.claimId}><span className="collector-avatar">{collector.username?.slice(0, 2).toUpperCase() || "?"}</span><span><strong>{collector.username ? `@${collector.username}` : "Usuario sin @ configurado"}</strong><small>{formatClaimDate(collector.claimedAt)}</small></span><em>{claimMethodLabel(collector.method)}</em></div>)}</div> : <p>Esta Pill todavía no fue coleccionada.</p>}</div>
     {isOwner && <div className="collaborator-box"><span className="field-title">Personas con acceso</span><p>Las personas añadidas son lectoras: pueden consultar estadísticas, QR, frase y enlaces, sin modificar la Pill.</p><div className="manager-add-row"><input value={readerUsername} onChange={(event) => setReaderUsername(event.target.value)} placeholder="@usuario" /><button className="secondary-button" onClick={addReader}><UserPlus size={16} />Agregar lector</button></div>{campaign.collaborators.length > 0 ? <div className="manager-list">{campaign.collaborators.map((reader) => <div key={reader.userId}><span><strong>@{reader.username}</strong><small>Solo lectura</small></span><em>Lector</em><button type="button" aria-label={`Retirar acceso de @${reader.username}`} onClick={() => void removeReader(reader)}><Trash2 /></button></div>)}</div> : <small>Aún no has dado acceso a otras personas.</small>}</div>}
     {isOwner && isDraft && campaign.claimed === 0 && <div className="delete-draft-box"><div><strong>Eliminar borrador</strong><p>Esta acción elimina la Pill y su imagen de forma permanente.</p></div><button type="button" disabled={saving} onClick={() => void deleteDraft()}><Trash2 />Eliminar borrador</button></div>}{message && <p className="form-error">{message}</p>}
   </section><aside className="distribution-card"><span className={`status ${statusClass(campaign.status)}`}><i />{campaign.status}</span>{campaign.reviewStatus === "approved" ? <>{campaign.qrEnabled && campaign.publicSlug && <div className="qr-preview">{qr ? <Image src={qr} alt="Código QR de la Pill" width={210} height={210} unoptimized /> : <QrCode />}<strong>QR listo para compartir</strong><a download={`${campaign.name}-qr.png`} href={qr}>Descargar QR</a><div className="claim-url public-claim-url"><input readOnly value={publicClaimUrl} /><button type="button" onClick={() => void navigator.clipboard.writeText(publicClaimUrl)}>Copiar enlace</button></div></div>}{campaign.secretEnabled && <div className="secret-ready secret-details"><ShieldCheck /><span><strong>Frase secreta</strong><b>{campaign.secretWord || "No recuperable para esta Pill antigua"}</b><small>{campaign.secretWord ? "Visible para el propietario y lectores autorizados." : "La frase sigue funcionando, pero fue creada antes de habilitar su recuperación."}</small></span>{campaign.secretWord && <button type="button" onClick={() => void navigator.clipboard.writeText(campaign.secretWord)}>Copiar frase</button>}</div>}<div className="individual-links"><strong>Enlaces individuales</strong><p>No vencen y solo pueden utilizarse una vez.</p>{isOwner && <div><input value={recipientLabel} onChange={(event) => setRecipientLabel(event.target.value)} placeholder="Persona o referencia" /><button type="button" onClick={createAdminLink}>Generar</button></div>}{newClaimUrl && <div className="claim-url"><input readOnly value={newClaimUrl} /><button type="button" onClick={() => void navigator.clipboard.writeText(newClaimUrl)}>Copiar</button></div>}<ul>{adminLinks.map((item) => { const url = item.tokenValue ? `${fansUrl}/claim/admin/${item.tokenValue}` : ""; return <li key={item.id}><span><b>{item.recipientLabel}</b><small>{item.redeemedAt ? "Utilizado" : item.tokenValue ? "Disponible" : "Enlace antiguo no recuperable"}</small></span>{url ? <button type="button" onClick={() => void navigator.clipboard.writeText(url)}>Copiar</button> : <em className={item.redeemedAt ? "used" : ""}>{item.redeemedAt ? "Canjeado" : "1 uso"}</em>}</li>; })}</ul></div></> : <div className="pending-distribution"><ShieldCheck /><h3>{isDraft ? "Borrador privado" : "Distribución bloqueada"}</h3><p>{isDraft ? "Guarda los cambios y envía la Pill a Curaduría cuando esté lista." : "El QR, la frase secreta y los enlaces se habilitan después de la aprobación."}</p></div>}</aside></div></div></div>{cropSource && <ArtworkCropper file={cropSource} onCancel={() => setCropSource(null)} onApply={(file) => { if (artworkPreview && artworkPreview !== campaign.imageUrl) URL.revokeObjectURL(artworkPreview); setArtwork(file); setArtworkPreview(URL.createObjectURL(file)); setCropSource(null); }} />}</>;
