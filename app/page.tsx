@@ -1,7 +1,7 @@
 "use client";
 
 import { Activity, ArrowRight, BadgeCheck, Bell, Building2, CalendarDays, Check, ChevronDown, CircleHelp, Crown, FolderHeart, Gauge, ImagePlus, LayoutDashboard, LockKeyhole, MapPin, Menu, MoreHorizontal, PauseCircle, Play, Plus, Search, Settings, ShieldCheck, Sparkles, TicketCheck, Trash2, UserCog, UserPlus, Users, X, Zap } from "lucide-react";
-import { FormEvent, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { CITY_OPTIONS } from "@/lib/cities";
 import { ManageCampaignPanel } from "@/components/manage-campaign-panel";
@@ -121,18 +121,18 @@ function Campaigns({ campaigns, onCreate, onManage }: { campaigns: Campaign[]; o
 }
 function CampaignTable({ campaigns, onManage }: { campaigns: Campaign[]; onManage: (campaign: Campaign) => void }) { return <div className="campaign-table">{campaigns.map((campaign) => <div className="campaign-row" key={campaign.id}><PillArtwork campaign={campaign} /><div className="campaign-name"><strong>{campaign.name}</strong><span>{campaign.eventType} · {campaign.venue}</span></div><div className="table-stat"><span>Estado</span><strong className={`status ${statusClass(campaign.status)}`}><i />{campaign.status}</strong></div><div className="table-stat"><span>Coleccionadas</span><strong>{formatNumber(campaign.claimed)} <small>/ {formatNumber(campaign.total)}</small></strong></div><div className="mini-progress"><i style={{ width: `${campaign.total ? (campaign.claimed / campaign.total) * 100 : 0}%` }} /></div><button className="icon-button" onClick={() => onManage(campaign)}><MoreHorizontal size={18} /></button></div>)}</div>; }
 
-function useAdminCollectibles() {
+function useAdminCollectibles(includeDrafts = false) {
   const [items, setItems] = useState<Campaign[]>([]); const [message, setMessage] = useState(""); const [loading, setLoading] = useState(true);
-  const load = () => fetch("/api/admin/collectibles", { cache: "no-store" }).then(async (response) => { const result = await response.json(); if (response.ok) setItems(result.collectibles); else setMessage(result.error); setLoading(false); }).catch(() => { setMessage("No pudimos cargar el panel administrativo."); setLoading(false); });
-  useEffect(() => { void load(); }, []);
+  const load = useCallback(() => fetch(`/api/admin/collectibles${includeDrafts ? "?scope=all" : ""}`, { cache: "no-store" }).then(async (response) => { const result = await response.json(); if (response.ok) setItems(result.collectibles); else setMessage(result.error); setLoading(false); }).catch(() => { setMessage("No pudimos cargar el panel administrativo."); setLoading(false); }), [includeDrafts]);
+  useEffect(() => { void load(); }, [load]);
   return { items, message, loading, load };
 }
 
 function AdminOverview({ onNavigate }: { onNavigate: (view: View) => void }) {
-  const { items, message, loading } = useAdminCollectibles();
+  const { items, message, loading } = useAdminCollectibles(true);
   const pending = items.filter((item) => item.reviewStatus === "pending").length;
   return <section><div className="admin-hero"><div><span className="admin-badge"><Crown />SUPER ADMIN</span><h2>Control general<br />de Pills.</h2><p>Supervisa la cola de curaduría, la seguridad de la comunidad y la evolución de los permisos.</p></div><button className="primary-button primary-large" onClick={() => onNavigate("moderation")}>Abrir curaduría <ArrowRight /></button></div>
-    {message && <p className="form-error">{message}</p>}<div className="admin-stat-grid"><article><span>Pendientes de revisión</span><strong>{loading ? "—" : pending}</strong><small>Requieren una decisión</small></article><article><span>Aprobados</span><strong>{loading ? "—" : items.filter((item) => item.reviewStatus === "approved").length}</strong><small>Distribución habilitada</small></article><article><span>Rechazados</span><strong>{loading ? "—" : items.filter((item) => item.reviewStatus === "rejected").length}</strong><small>Con motivo registrado</small></article><article><span>Total de solicitudes</span><strong>{loading ? "—" : items.length}</strong><small>Historial de curaduría</small></article></div>
+    {message && <p className="form-error">{message}</p>}<div className="admin-stat-grid"><article><span>Pendientes de revisión</span><strong>{loading ? "—" : pending}</strong><small>Requieren una decisión</small></article><article><span>Aprobados</span><strong>{loading ? "—" : items.filter((item) => item.reviewStatus === "approved").length}</strong><small>Distribución habilitada</small></article><article><span>Borradores</span><strong>{loading ? "—" : items.filter((item) => item.reviewStatus === "draft").length}</strong><small>Aún no enviados</small></article><article><span>Total de coleccionables</span><strong>{loading ? "—" : items.length}</strong><small>Todos los creadores</small></article></div>
     <div className="admin-section-grid"><button onClick={() => onNavigate("moderation")}><span className="admin-section-icon orange"><BadgeCheck /></span><div><strong>Curaduría de coleccionables</strong><p>Aprueba, rechaza y revisa el historial de cada solicitud.</p></div><ArrowRight /></button><button onClick={() => onNavigate("adminRoles")}><span className="admin-section-icon dark"><UserCog /></span><div><strong>Usuarios y roles</strong><p>Consulta la estructura de permisos preparada para el equipo.</p></div><ArrowRight /></button></div>
   </section>;
 }

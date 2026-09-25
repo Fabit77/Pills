@@ -18,7 +18,9 @@ export async function GET() {
   const { supabase, user } = await requireUser();
   if (!user) return NextResponse.json({ error: "Tu sesión expiró." }, { status: 401 });
 
-  const { data, error } = await supabase.from("campaigns").select(campaignColumns).order("created_at", { ascending: false });
+  // This is the creator workspace feed. Admin privileges must not broaden it:
+  // each creator sees only the Pills they personally created here.
+  const { data, error } = await supabase.from("campaigns").select(campaignColumns).eq("created_by", user.id).order("created_at", { ascending: false });
   if (error) return NextResponse.json({ error: "No pudimos cargar tus coleccionables." }, { status: 500 });
 
   const ids = (data ?? []).map((row) => row.id);
