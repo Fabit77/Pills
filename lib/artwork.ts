@@ -11,6 +11,16 @@ export async function optimizeArtwork(file: File) {
   if (!file.size || file.size > MAX_ARTWORK_INPUT_BYTES) throw new ArtworkError("La imagen original debe pesar menos de 5 MB.");
 
   const source = Buffer.from(await file.arrayBuffer());
+
+  // The browser already exports cropped static artwork as a 500 × 500 WebP.
+  // Re-encoding that file wastes CPU, and decoding every frame of an animated
+  // GIF can exceed a serverless request's execution time. Both formats are
+  // safe to store directly after the size and MIME checks above.
+  if (file.type === "image/gif") return { data: source, contentType: "image/gif", extension: "gif" };
+  if (file.type === "image/webp" && source.byteLength <= MAX_ARTWORK_OUTPUT_BYTES) {
+    return { data: source, contentType: "image/webp", extension: "webp" };
+  }
+
   const attempts = [
     { size: 1000, quality: 82 },
     { size: 900, quality: 72 },
@@ -19,12 +29,12 @@ export async function optimizeArtwork(file: File) {
 
   try {
     for (const attempt of attempts) {
-      const output = await sharp(source, { animated: true, limitInputPixels: 40_000_000 })
+      const output = await sharp(source, { animated: false, limitInputPixels: 40_000_000 })
         .rotate()
         .resize(attempt.size, attempt.size, { fit: "cover", position: "centre" })
-        .webp({ quality: attempt.quality, effort: 5, smartSubsample: true })
+        .webp({ quality: attempt.quality, effort: 2, smartSubsample: true })
         .toBuffer();
-      if (output.byteLength <= MAX_ARTWORK_OUTPUT_BYTES) return output;
+      if (output.byteLength <= MAX_ARTWORK_OUTPUT_BYTES) return { data: output, contentType: "image/webp", extension: "webp" };
     }
   } catch {
     throw new ArtworkError("No pudimos procesar esa imagen. Prueba con otro archivo.");

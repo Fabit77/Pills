@@ -73,9 +73,11 @@ export async function POST(request: Request) {
     if (artwork.size > MAX_ARTWORK_BYTES) return NextResponse.json({ error: "La imagen o GIF debe pesar máximo 4 MB." }, { status: 413 });
     if (!/^[a-z0-9]+-[a-z0-9]+-[a-z0-9]+$/.test(publicSlug)) return NextResponse.json({ error: "El enlace debe tener exactamente tres palabras separadas por guiones." }, { status: 400 });
     if (rawEventUrl && !eventUrl) return NextResponse.json({ error: "Escribe un sitio web válido, por ejemplo asadao.io." }, { status: 400 });
-    let optimizedArtwork: Buffer;
+    console.info("[collectibles:create] preparing artwork", { contentType: artwork.type, bytes: artwork.size });
+    let optimizedArtwork: Awaited<ReturnType<typeof optimizeArtwork>>;
     try { optimizedArtwork = await optimizeArtwork(artwork); }
     catch (error) { return NextResponse.json({ error: error instanceof ArtworkError ? error.message : "No pudimos procesar la imagen." }, { status: 400 }); }
+    console.info("[collectibles:create] artwork ready", { contentType: optimizedArtwork.contentType, bytes: optimizedArtwork.data.byteLength });
     if (Number.isNaN(new Date(startsAtIso).getTime()) || (endsAtIso && Number.isNaN(new Date(endsAtIso).getTime()))) return NextResponse.json({ error: "Revisa la fecha y la hora." }, { status: 400 });
     if (endsAtIso && new Date(endsAtIso) <= new Date(startsAtIso)) return NextResponse.json({ error: "La fecha y hora de término deben ser posteriores al inicio." }, { status: 400 });
 
@@ -88,8 +90,8 @@ export async function POST(request: Request) {
       membership = { organization_id: organizationId };
     }
 
-    const filePath = `${user.id}/${crypto.randomUUID()}.webp`;
-    const { error: uploadError } = await supabase.storage.from("collectible-artwork").upload(filePath, optimizedArtwork, { contentType: "image/webp", upsert: false });
+    const filePath = `${user.id}/${crypto.randomUUID()}.${optimizedArtwork.extension}`;
+    const { error: uploadError } = await supabase.storage.from("collectible-artwork").upload(filePath, optimizedArtwork.data, { contentType: optimizedArtwork.contentType, upsert: false });
     if (uploadError) return NextResponse.json({ error: "No pudimos almacenar el arte." }, { status: 500 });
     const { data: publicArtwork } = supabase.storage.from("collectible-artwork").getPublicUrl(filePath);
 

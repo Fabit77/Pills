@@ -92,11 +92,11 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   let newArtworkUrl = "";
   const artwork = form.get("artwork");
   if (artwork instanceof File && artwork.size) {
-    let optimizedArtwork: Buffer;
+    let optimizedArtwork: Awaited<ReturnType<typeof optimizeArtwork>>;
     try { optimizedArtwork = await optimizeArtwork(artwork); }
     catch (error) { return NextResponse.json({ error: error instanceof ArtworkError ? error.message : "No pudimos procesar la imagen." }, { status: 400 }); }
-    const filePath = `${authData.user.id}/${crypto.randomUUID()}.webp`;
-    const { error: uploadError } = await supabase.storage.from("collectible-artwork").upload(filePath, optimizedArtwork, { contentType: "image/webp", upsert: false });
+    const filePath = `${authData.user.id}/${crypto.randomUUID()}.${optimizedArtwork.extension}`;
+    const { error: uploadError } = await supabase.storage.from("collectible-artwork").upload(filePath, optimizedArtwork.data, { contentType: optimizedArtwork.contentType, upsert: false });
     if (uploadError) return NextResponse.json({ error: "No pudimos almacenar el arte." }, { status: 500 });
     newArtworkUrl = supabase.storage.from("collectible-artwork").getPublicUrl(filePath).data.publicUrl;
     artworkUrl = newArtworkUrl;
