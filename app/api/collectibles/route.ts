@@ -47,6 +47,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  console.info("[collectibles:create] route entered");
   const { supabase, user } = await requireUser();
   if (!user) return NextResponse.json({ error: "Tu sesión expiró." }, { status: 401 });
 

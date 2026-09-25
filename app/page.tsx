@@ -65,15 +65,24 @@ export default function CreatorStudio() {
   useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(""), 3200); return () => window.clearTimeout(timer); }, [toast]);
   async function createCampaign(body: FormData, intent: "draft" | "submit") {
     body.set("intent", intent);
-    const response = await fetch("/api/collectibles", { method: "POST", body });
-    const contentType = response.headers.get("content-type") || "";
-    const result = contentType.includes("application/json") ? await response.json() : null;
-    if (!response.ok) {
-      if (response.status === 413) throw new Error("La imagen supera el tamaño permitido. Usa una imagen o GIF de máximo 4 MB.");
-      throw new Error(result?.error || "No pudimos guardar el coleccionable. Intenta nuevamente.");
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 60_000);
+    try {
+      const response = await fetch("/api/collectibles", { method: "POST", body, signal: controller.signal });
+      const contentType = response.headers.get("content-type") || "";
+      const result = contentType.includes("application/json") ? await response.json() : null;
+      if (!response.ok) {
+        if (response.status === 413) throw new Error("La imagen supera el tamaño permitido. Usa una imagen o GIF de máximo 4 MB.");
+        throw new Error(result?.error || "No pudimos guardar el coleccionable. Intenta nuevamente.");
+      }
+      if (!result?.collectible) throw new Error("El servidor no devolvió la Pill creada. Intenta nuevamente.");
+      setCampaigns((current) => [result.collectible, ...current]); setShowCreate(false); setView("campaigns"); setToast(intent === "submit" ? "Pill enviada a Curaduría" : "Borrador guardado");
+    } catch (cause) {
+      if (cause instanceof DOMException && cause.name === "AbortError") throw new Error("El envío tardó demasiado. Revisa tu conexión e intenta nuevamente.");
+      throw cause;
+    } finally {
+      window.clearTimeout(timeout);
     }
-    if (!result?.collectible) throw new Error("El servidor no devolvió la Pill creada. Intenta nuevamente.");
-    setCampaigns((current) => [result.collectible, ...current]); setShowCreate(false); setView("campaigns"); setToast(intent === "submit" ? "Pill enviada a Curaduría" : "Borrador guardado");
   }
   const title = navItems.find((item) => item.id === view)?.label ?? "Inicio";
   if (loading) return <main className="studio-loading"><span className="brand-mark"><span /></span><strong>Cargando Pills…</strong></main>;
@@ -218,11 +227,6 @@ function CreateCampaign({ onClose, onSubmit }: { onClose: () => void; onSubmit: 
     setSaving(true);
     setError("");
     try {
-      const availabilityResponse = await fetch(`/api/collectibles/slug-availability?slug=${encodeURIComponent(publicSlug)}`, { cache: "no-store" });
-      const availability = await availabilityResponse.json();
-      if (!availabilityResponse.ok) throw new Error(availability.error || "No pudimos comprobar el enlace. Intenta nuevamente.");
-      if (!availability.available) { setSlugStatus("taken"); throw new Error("Ese enlace ya está en uso. Elige otras tres palabras."); }
-      setSlugStatus("available");
       data.set("publicSlug", publicSlug);
       if (croppedArtwork) data.set("artwork", croppedArtwork);
       const startLocal = `${data.get("date")}T${data.get("startTime") || "00:00"}`;
