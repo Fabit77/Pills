@@ -68,7 +68,7 @@ export function ManageCampaignPanel({ campaign, onClose, onSaved, onDeleted }: {
   async function selectArtwork(file?: File) {
     setMessage("");
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { setMessage("La imagen debe pesar menos de 5 MB."); return; }
+    if (file.size > 4 * 1024 * 1024) { setMessage("La imagen o GIF debe pesar máximo 4 MB."); return; }
     try { const bitmap = await createImageBitmap(file); bitmap.close(); } catch { setMessage("No pudimos leer esta imagen."); return; }
     if (file.type === "image/gif") {
       if (artworkPreview && artworkPreview !== campaign.imageUrl) URL.revokeObjectURL(artworkPreview);

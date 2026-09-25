@@ -6,6 +6,7 @@ import { decryptPrivateValue, encryptPrivateValue } from "@/lib/private-values";
 import { normalizeWebsiteUrl } from "@/lib/website";
 
 const campaignColumns = "id,name,description,event_type,venue,starts_at,ends_at,event_url,supply,status,artwork_url,qr_enabled,qr_token,secret_word_hash,public_slug,review_status,submitted_at,rejection_reason,claimed_count,first_claimed_at,is_paused,created_by,created_at";
+const MAX_ARTWORK_BYTES = 4 * 1024 * 1024;
 
 async function requireUser() {
   const supabase = await createClient();
@@ -66,6 +67,7 @@ export async function POST(request: Request) {
     const rawEventUrl = String(form.get("eventUrl") ?? "").trim().slice(0, 500);
     const eventUrl = normalizeWebsiteUrl(rawEventUrl);
     if (!name || !description || !startsAtIso || !city || !(artwork instanceof File) || !artwork.size) return NextResponse.json({ error: "Completa los campos obligatorios." }, { status: 400 });
+    if (artwork.size > MAX_ARTWORK_BYTES) return NextResponse.json({ error: "La imagen o GIF debe pesar máximo 4 MB." }, { status: 413 });
     if (!/^[a-z0-9]+-[a-z0-9]+-[a-z0-9]+$/.test(publicSlug)) return NextResponse.json({ error: "El enlace debe tener exactamente tres palabras separadas por guiones." }, { status: 400 });
     if (rawEventUrl && !eventUrl) return NextResponse.json({ error: "Escribe un sitio web válido, por ejemplo asadao.io." }, { status: 400 });
     let optimizedArtwork: Buffer;
