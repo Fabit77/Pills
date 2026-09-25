@@ -69,6 +69,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const name = String(form.get("name") ?? "").trim().slice(0, 150);
   const description = String(form.get("description") ?? "").trim().slice(0, 1500);
   const startsAt = String(form.get("date") ?? "");
+  const clientLocalDate = String(form.get("clientLocalDate") ?? "");
   const endsAt = String(form.get("endDate") ?? "");
   const startsAtIso = String(form.get("startsAtIso") ?? "") || (startsAt ? `${startsAt}T${String(form.get("startTime") ?? "00:00")}:00Z` : "");
   const endsAtIso = String(form.get("endsAtIso") ?? "") || (endsAt ? `${endsAt}T${String(form.get("endTime") ?? "23:59")}:00Z` : "");
@@ -80,6 +81,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const secretEnabled = form.get("distributionSecret") === "on";
   const secretWord = String(form.get("secretWord") ?? "").trim().slice(0, 60);
   if (!name || !description || !startsAtIso || !city) return NextResponse.json({ error: "Completa los campos obligatorios." }, { status: 400 });
+  if (/^\d{4}-\d{2}-\d{2}$/.test(clientLocalDate) && startsAt < clientLocalDate) return NextResponse.json({ error: "La fecha de inicio debe ser hoy o una fecha futura." }, { status: 400 });
   if (rawEventUrl && !eventUrl) return NextResponse.json({ error: "Escribe un sitio web válido, por ejemplo asadao.io." }, { status: 400 });
   if (Number.isNaN(new Date(startsAtIso).getTime()) || (endsAtIso && Number.isNaN(new Date(endsAtIso).getTime()))) return NextResponse.json({ error: "Revisa la fecha y la hora." }, { status: 400 });
   if (endsAtIso && new Date(endsAtIso) <= new Date(startsAtIso)) return NextResponse.json({ error: "La fecha y hora de término deben ser posteriores al inicio." }, { status: 400 });

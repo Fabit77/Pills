@@ -56,6 +56,7 @@ export async function POST(request: Request) {
     const name = String(form.get("name") ?? "").trim().slice(0, 150);
     const description = String(form.get("description") ?? "").trim().slice(0, 1500);
     const startsAt = String(form.get("date") ?? "");
+    const clientLocalDate = String(form.get("clientLocalDate") ?? "");
     const endsAt = String(form.get("endDate") ?? "");
     const startsAtIso = String(form.get("startsAtIso") ?? "") || (startsAt ? `${startsAt}T${String(form.get("startTime") ?? "00:00")}:00Z` : "");
     const endsAtIso = String(form.get("endsAtIso") ?? "") || (endsAt ? `${endsAt}T${String(form.get("endTime") ?? "23:59")}:00Z` : "");
@@ -67,6 +68,7 @@ export async function POST(request: Request) {
     const rawEventUrl = String(form.get("eventUrl") ?? "").trim().slice(0, 500);
     const eventUrl = normalizeWebsiteUrl(rawEventUrl);
     if (!name || !description || !startsAtIso || !city || !(artwork instanceof File) || !artwork.size) return NextResponse.json({ error: "Completa los campos obligatorios." }, { status: 400 });
+    if (/^\d{4}-\d{2}-\d{2}$/.test(clientLocalDate) && startsAt < clientLocalDate) return NextResponse.json({ error: "La fecha de inicio debe ser hoy o una fecha futura." }, { status: 400 });
     if (artwork.size > MAX_ARTWORK_BYTES) return NextResponse.json({ error: "La imagen o GIF debe pesar máximo 4 MB." }, { status: 413 });
     if (!/^[a-z0-9]+-[a-z0-9]+-[a-z0-9]+$/.test(publicSlug)) return NextResponse.json({ error: "El enlace debe tener exactamente tres palabras separadas por guiones." }, { status: 400 });
     if (rawEventUrl && !eventUrl) return NextResponse.json({ error: "Escribe un sitio web válido, por ejemplo asadao.io." }, { status: 400 });
