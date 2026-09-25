@@ -95,33 +95,35 @@ export async function POST(request: Request) {
     if (uploadError) return NextResponse.json({ error: "No pudimos almacenar el arte." }, { status: 500 });
     const { data: publicArtwork } = supabase.storage.from("collectible-artwork").getPublicUrl(filePath);
 
-    const { data: campaign, error } = await supabase.from("campaigns").insert({
-      organization_id: membership.organization_id,
-      name,
-      description,
-      event_type: "Experiencia",
-      venue: city,
-      starts_at: startsAtIso,
-      ends_at: endsAtIso || null,
-      event_url: eventUrl || null,
-      tags: [],
-      supply: Math.max(1, Math.min(Number(form.get("supply")) || 100, 100)),
-      audience: "Cualquier persona",
-      status: "draft",
-      artwork_url: publicArtwork.publicUrl,
-      qr_enabled: form.get("distributionQr") === "on",
-      secret_word_hash: secretWord ? hashValue(secretWord) : null,
-      public_slug: publicSlug,
-      review_status: "pending",
-      submitted_at: intent === "submit" ? new Date().toISOString() : null,
-      created_by: user.id,
-    }).select(campaignColumns).single();
+    const { data: campaignId, error } = await supabase.rpc("create_own_collectible", {
+      target_organization_id: membership.organization_id,
+      collectible_name: name,
+      collectible_description: description,
+      collectible_city: city,
+      collectible_starts_at: startsAtIso,
+      collectible_ends_at: endsAtIso || null,
+      collectible_event_url: eventUrl || null,
+      collectible_supply: Math.max(1, Math.min(Number(form.get("supply")) || 100, 100)),
+      collectible_artwork_url: publicArtwork.publicUrl,
+      collectible_qr_enabled: form.get("distributionQr") === "on",
+      collectible_secret_word_hash: secretWord ? hashValue(secretWord) : null,
+      collectible_public_slug: publicSlug,
+      submit_for_review: intent === "submit",
+    });
 
-    if (error) {
-      console.error("[collectibles:create] campaign insert failed", { code: error.code, message: error.message });
+    if (error || !campaignId) {
+      console.error("[collectibles:create] campaign insert failed", { code: error?.code, message: error?.message });
       await supabase.storage.from("collectible-artwork").remove([filePath]);
-      if (error.code === "23505") return NextResponse.json({ error: "Este enlace ya está en uso. Elige otras tres palabras." }, { status: 409 });
+      if (error?.code === "23505") return NextResponse.json({ error: "Este enlace ya está en uso. Elige otras tres palabras." }, { status: 409 });
       return NextResponse.json({ error: "No pudimos guardar el coleccionable." }, { status: 500 });
+    }
+
+    const { data: campaign, error: campaignReadError } = await supabase.from("campaigns").select(campaignColumns).eq("id", campaignId).single();
+    if (campaignReadError || !campaign) {
+      console.error("[collectibles:create] campaign reload failed", { code: campaignReadError?.code, message: campaignReadError?.message });
+      await supabase.rpc("delete_own_draft_collectible", { target_campaign_id: campaignId });
+      await supabase.storage.from("collectible-artwork").remove([filePath]);
+      return NextResponse.json({ error: "La Pill se creó, pero no pudimos completar el guardado." }, { status: 500 });
     }
 
     const rawEntities = String(form.get("entities") ?? "[]");
