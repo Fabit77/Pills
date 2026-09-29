@@ -65,17 +65,8 @@ function LoginContent() {
 
       <section className="creator-v2-hero">
         <div className="creator-v2-hero-copy"><h1>Tus<br />experiencias<br /><span>cuentan</span><br />tu historia.</h1><h2>Colecciona, organiza y revive<span>los momentos que te definen.</span></h2><a className="creator-v2-button" href={signedProfile ? "/studio" : "#access"}>{signedProfile ? "Crear una Pill" : "Comenzar"}<ArrowRight /></a></div>
-        <div className="creator-phone-scene" aria-label="Vista previa del perfil de un fan con sus Pills">
-          <span className="creator-hero-wave" />
-          <article className="creator-phone">
-            <header><b>9:41</b><span /></header>
-            <div className="creator-phone-profile"><i>R</i><div><strong>Roberto</strong><small>@robertox</small></div></div>
-            <div className="creator-phone-stats"><span><strong>125</strong>Pills coleccionadas</span><span><strong>48</strong>Momentos compartidos</span></div>
-            <div className="creator-phone-tabs"><b>Pills</b><span>Momentos</span></div>
-            <div className="creator-phone-grid"><PillImage src="/pills/aysen-futuro-final.webp" alt="Pill Aysén Futuro" /><PillImage src="/pills/asadao-final.webp" alt="Pill AsaDAO" /><PillImage src="/pills/campus-on-chain.webp" alt="Pill Campus on Chain" /><PillImage src="/pills/asadao-42.webp" alt="Pill AsaDAO" /><PillImage src="/pills/campus-on-chain.webp" alt="Pill Campus" /><PillImage src="/pills/aysen-futuro-final.webp" alt="Pill Aysén" /></div>
-          </article>
-          <PillImage className="creator-float-pill creator-float-one" src="/pills/aysen-futuro-final.webp" alt="Pill flotante" /><PillImage className="creator-float-pill creator-float-two" src="/pills/asadao-final.webp" alt="Pill flotante" /><PillImage className="creator-float-pill creator-float-three" src="/pills/campus-on-chain.webp" alt="Pill flotante" />
-          <em className="creator-hand-note">CREA<br />LO QUE<br />CONTINÚA</em>
+        <div className="creator-phone-scene creator-hero-art" aria-label="Perfil de Pills rodeado de coleccionables">
+          <Image src="/landing/pills-fans-hero.jpg" alt="Perfil de Roberto en Pills rodeado de sus coleccionables" width={1024} height={1536} priority sizes="(max-width: 760px) 100vw, 58vw" />
         </div>
       </section>
 
