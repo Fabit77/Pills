@@ -8,7 +8,7 @@ export async function GET() {
 
   const [{ data: username }, { data: profile }, { data: admin }] = await Promise.all([
     supabase.from("public_usernames").select("username").eq("user_id", authData.user.id).maybeSingle(),
-    supabase.from("profiles").select("first_name,last_name,bio").eq("id", authData.user.id).maybeSingle(),
+    supabase.from("profiles").select("first_name,last_name,bio,account_status").eq("id", authData.user.id).maybeSingle(),
     supabase.from("app_admins").select("role").eq("user_id", authData.user.id).maybeSingle(),
   ]);
 
@@ -19,6 +19,7 @@ export async function GET() {
     firstName: profile?.first_name ?? "",
     lastName: profile?.last_name ?? "",
     bio: profile?.bio ?? "",
+    accountStatus: profile?.account_status ?? "active",
     adminRole: adminRole ?? (fallbackSuperAdmin ? "super_admin" : null),
     canModerate: Boolean(adminRole) || fallbackSuperAdmin,
     isSuperAdmin: adminRole === "super_admin" || fallbackSuperAdmin,

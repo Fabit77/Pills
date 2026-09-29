@@ -31,13 +31,14 @@ export async function updateSession(request: NextRequest) {
   const claims = data?.claims;
   const signedIn = Boolean(claims);
   let hasUsername = false;
+  let accountStatus = "active";
   if (signedIn && typeof claims?.sub === "string") {
-    const { data: username } = await supabase
-      .from("public_usernames")
-      .select("username")
-      .eq("user_id", claims.sub)
-      .maybeSingle();
+    const [{ data: username }, { data: profile }] = await Promise.all([
+      supabase.from("public_usernames").select("username").eq("user_id", claims.sub).maybeSingle(),
+      supabase.from("profiles").select("account_status").eq("id", claims.sub).maybeSingle(),
+    ]);
     hasUsername = Boolean(username?.username);
+    accountStatus = profile?.account_status ?? "active";
   }
   if (path === "/") {
     const target = request.nextUrl.clone();
@@ -49,6 +50,20 @@ export async function updateSession(request: NextRequest) {
     const target = request.nextUrl.clone();
     target.pathname = "/login";
     target.searchParams.set("next", path);
+    return NextResponse.redirect(target);
+  }
+
+  if (signedIn && accountStatus !== "active" && path !== "/account-restricted" && !path.startsWith("/auth/signout")) {
+    const target = request.nextUrl.clone();
+    target.pathname = "/account-restricted";
+    target.search = `?status=${encodeURIComponent(accountStatus)}`;
+    return NextResponse.redirect(target);
+  }
+
+  if (path === "/account-restricted" && (!signedIn || accountStatus === "active")) {
+    const target = request.nextUrl.clone();
+    target.pathname = signedIn ? "/studio" : "/login";
+    target.search = "";
     return NextResponse.redirect(target);
   }
 
