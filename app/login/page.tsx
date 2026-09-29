@@ -79,7 +79,7 @@ function LoginContent() {
             <span className="orbital-art"><Image src="/pills/campus-on-chain.webp" alt="Pill Campus on Chain" fill sizes="120px" unoptimized /></span>
           </div>
           <div className="orbit orbit-track orbit-track-four">
-            <span className="orbital-art"><Image src="/pills/asadao-42.webp" alt="Pill AsaDAO 42" fill sizes="120px" unoptimized /></span>
+            <span className="orbital-art"><Image src="/pills/asadao-42.webp" alt="Pill AsaDAO 42" fill sizes="120px" priority unoptimized /></span>
           </div>
           <article className="access-card">
             {signedProfile ? <>
