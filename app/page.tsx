@@ -14,6 +14,7 @@ import { CollectionsPanel } from "@/components/collections-panel";
 import { OrganizationsPanel } from "@/components/organizations-panel";
 import { AdminOrganizationsPanel } from "@/components/admin-organizations-panel";
 import { normalizeWebsiteUrl } from "@/lib/website";
+import { PillsLogo } from "@/components/pills-logo";
 
 type View = "overview" | "campaigns" | "collections" | "organizations" | "verification" | "profile" | "adminOverview" | "moderation" | "organizationReview" | "adminRoles";
 type AdminRole = "super_admin" | "curator" | "admin" | null;
@@ -92,9 +93,9 @@ export default function CreatorStudio() {
     }
   }
   const title = navItems.find((item) => item.id === view)?.label ?? "Inicio";
-  if (loading) return <main className="studio-loading"><span className="brand-mark"><span /></span><strong>Cargando Pills…</strong></main>;
+  if (loading) return <main className="studio-loading"><PillsLogo compact /><strong>Cargando Pills…</strong></main>;
 
-  return <main className="app-shell"><aside className={`sidebar ${showMenu ? "sidebar-open" : ""}`}><div className="brand"><span className="brand-mark"><span /></span><strong>Pills</strong><em>Creator Studio</em></div>
+  return <main className="app-shell"><aside className={`sidebar ${showMenu ? "sidebar-open" : ""}`}><div className="brand"><PillsLogo context="Creator Studio" inverse /></div>
     <button className="workspace-switch" onClick={() => setView("profile")}><span className="avatar avatar-orange">{profile?.username.slice(0, 2).toUpperCase()}</span><span><strong>@{profile?.username}</strong><small>Cuenta personal</small></span><ChevronDown size={15} /></button>
     <nav><p className="nav-label">Workspace</p>{baseNav.map((item) => <button key={item.id} className={view === item.id ? "nav-active" : ""} onClick={() => { setView(item.id); setShowMenu(false); }}><item.icon size={18} />{item.label}</button>)}{visibleAdminNav.length > 0 && <><p className="nav-label admin-nav-label"><Crown size={11} />{profile?.isSuperAdmin ? "Super Admin" : "Administración"}</p>{visibleAdminNav.map((item) => <button key={item.id} className={`${view === item.id ? "nav-active" : ""} admin-nav-item`} onClick={() => { setView(item.id); setShowMenu(false); }}><item.icon size={18} />{item.label}{item.id === "moderation" && <span className="nav-dot" />}</button>)}</>}</nav>
     <div className="sidebar-bottom"><button><CircleHelp size={18} />Centro de ayuda</button><button onClick={() => setView("profile")}><Settings size={18} />Configuración</button><div className="plan-card"><span>PLAN INICIAL</span><strong>{campaigns.length} coleccionables</strong><small>Tu espacio de creación</small><div><i style={{ width: "0%" }} /></div></div><button className="user-row" onClick={async () => { await fetch("/auth/signout", { method: "POST" }); router.replace("/login"); router.refresh(); }}><span className="avatar">{profile?.username.slice(0, 2).toUpperCase()}</span><span><strong>{profile?.firstName || `@${profile?.username}`}</strong><small>Cerrar sesión</small></span><MoreHorizontal size={17} /></button></div></aside>

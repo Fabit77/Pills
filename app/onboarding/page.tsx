@@ -3,6 +3,7 @@
 import { ArrowRight, AtSign, Check, LockKeyhole, Sparkles, UserRound } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { PillsLogo } from "@/components/pills-logo";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -21,7 +22,7 @@ export default function OnboardingPage() {
   }
 
   return <main className="onboarding-shell">
-    <a className="landing-brand onboarding-brand" href="/login"><span className="brand-mark"><span /></span><strong>Pills</strong><em>Creator Studio</em></a>
+    <a className="landing-brand onboarding-brand" href="/login"><PillsLogo context="Creator Studio" /></a>
     <section className="onboarding-card">
       <div className="onboarding-intro">
         <span className="onboarding-icon"><Sparkles /></span><span className="eyebrow">TU IDENTIDAD EN PILLS</span>
