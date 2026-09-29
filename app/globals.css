@@ -89,6 +89,62 @@
 @keyframes orbit-two-art{from{transform:translateY(-50%) rotate(42deg)}to{transform:translateY(-50%) rotate(402deg)}}
 @media(max-width:560px){.orbital-art{width:88px;height:88px;left:-44px}.orbit-track-two .orbital-art{right:-44px}}
 @media(prefers-reduced-motion:reduce){.orbit-track,.orbit-track .orbital-art{animation-play-state:paused}}
+
+/* Scroll and viewport resilience across Creator Studio */
+.sidebar{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.sidebar-bottom{flex:0 0 auto}
+.modal-backdrop{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.modal{max-height:calc(100vh - 30px);max-height:calc(100dvh - 30px);overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.filter-row,.admin-filter-row{overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.filter-row::-webkit-scrollbar,.admin-filter-row::-webkit-scrollbar{display:none}
+.filter-row button,.admin-filter-row button{flex:0 0 auto}
+.recent-panel,.campaign-table{overscroll-behavior-inline:contain;-webkit-overflow-scrolling:touch}
+
+@media(min-width:821px){
+  .wizard-modal{height:min(720px,calc(100dvh - 30px))}
+  .wizard-panel{min-height:0}
+  .wizard-panel.active{display:block;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+}
+
+@media(max-width:760px){
+  .sidebar{padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+  .manage-backdrop,.review-backdrop{align-items:stretch;padding:0;overflow:hidden}
+  .manage-modal,.review-modal{width:100%;height:100vh;height:100dvh;max-height:100vh;max-height:100dvh;border-radius:0;display:flex;flex-direction:column;overflow:hidden}
+  .manage-modal>.modal-head,.review-modal>.modal-head{flex:0 0 auto;padding:18px 20px 15px;background:#fbfaf6;border-bottom:1px solid var(--line);position:relative;z-index:2}
+  .manage-modal>.modal-head h2,.review-modal>.modal-head h2{font-size:27px;overflow-wrap:anywhere}
+  .manage-layout,.review-content{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  .manage-layout>section,.review-content{padding:20px}
+  .distribution-card{padding:22px 20px calc(24px + env(safe-area-inset-bottom))}
+  .review-content{padding-bottom:calc(22px + env(safe-area-inset-bottom))}
+  .curation-actions{position:sticky;bottom:calc(-22px - env(safe-area-inset-bottom));z-index:2;margin-left:-20px;margin-right:-20px;padding:14px 20px calc(14px + env(safe-area-inset-bottom));background:#fbfaf6;box-shadow:0 -8px 22px rgba(35,31,26,.07)}
+  .crop-editor-backdrop{place-items:stretch;padding:0;overflow:hidden}
+  .crop-editor{width:100%;height:100vh;height:100dvh;max-height:100vh;max-height:100dvh;border-radius:0;padding:18px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  .crop-canvas-shell{width:min(390px,100%,44dvh)}
+  .crop-editor footer{position:sticky;bottom:-18px;z-index:2;margin:0 -18px;padding:14px 18px calc(14px + env(safe-area-inset-bottom));background:#fbfaf7;box-shadow:0 -8px 22px rgba(35,31,26,.06)}
+  .time-picker-popover{max-height:calc(100dvh - 32px);overflow-y:auto;overscroll-behavior:contain}
+}
+
+@media(max-width:560px){
+  .topbar{height:auto;min-height:72px;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:8px 6px;padding:10px 14px}
+  .topbar>div:first-of-type{min-width:0;margin:0}
+  .topbar h1{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .top-actions{grid-column:1/-1;width:100%;min-width:0}
+  .global-search{width:auto;min-width:0;flex:1}
+  .curation-actions{flex-direction:column}
+  .curation-actions button{width:100%}
+  .modal-actions{flex-wrap:wrap}
+  .modal-actions button{flex:1 1 130px}
+  .delete-draft-box{align-items:stretch;flex-direction:column}
+  .delete-draft-box button{justify-content:center}
+  .individual-links>div,.claim-url{align-items:stretch;flex-direction:column}
+  .individual-links button,.claim-url button{width:100%}
+}
+
+@media(max-height:620px) and (min-width:761px){
+  .modal-backdrop{align-items:flex-start;padding-top:15px;padding-bottom:15px}
+  .crop-editor-backdrop{place-items:start center}
+  .crop-canvas-shell{width:min(300px,46vh)}
+}
 .orbit-track-two,.orbit-track-two .orbital-art{animation-delay:-34s}
 .orbit-track-two{width:620px;animation-name:orbit-two-visible;animation-delay:0s}.orbit-track-two .orbital-art{animation-name:orbit-two-art-visible;animation-delay:0s}
 @keyframes orbit-two-visible{from{transform:rotate(42deg)}to{transform:rotate(402deg)}}

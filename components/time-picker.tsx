@@ -127,17 +127,22 @@ export function TimePicker({ value, onChange, name, ariaLabel = "Seleccionar hor
       const height = popover.offsetHeight;
       const margin = 16;
       const gap = 12;
+      const visualViewport = window.visualViewport;
+      const viewportWidth = visualViewport?.width ?? window.innerWidth;
+      const viewportHeight = visualViewport?.height ?? window.innerHeight;
+      const viewportLeft = visualViewport?.offsetLeft ?? 0;
+      const viewportTop = visualViewport?.offsetTop ?? 0;
       let left: number;
       let top: number;
 
-      if (window.innerWidth <= 760) {
-        left = Math.max(margin, (window.innerWidth - width) / 2);
-        top = Math.max(margin, (window.innerHeight - height) / 2);
+      if (viewportWidth <= 760) {
+        left = viewportLeft + Math.max(margin, (viewportWidth - width) / 2);
+        top = viewportTop + Math.max(margin, (viewportHeight - height) / 2);
       } else {
         left = triggerRect.right + gap;
-        if (left + width > window.innerWidth - margin) left = Math.max(margin, triggerRect.left - width - gap);
+        if (left + width > viewportLeft + viewportWidth - margin) left = Math.max(viewportLeft + margin, triggerRect.left - width - gap);
         top = triggerRect.top + triggerRect.height / 2 - height / 2;
-        top = Math.min(Math.max(margin, top), Math.max(margin, window.innerHeight - height - margin));
+        top = Math.min(Math.max(viewportTop + margin, top), Math.max(viewportTop + margin, viewportTop + viewportHeight - height - margin));
       }
       setPosition({ top, left });
     }
@@ -145,9 +150,13 @@ export function TimePicker({ value, onChange, name, ariaLabel = "Seleccionar hor
     placePopover();
     window.addEventListener("resize", placePopover);
     window.addEventListener("scroll", placePopover, true);
+    window.visualViewport?.addEventListener("resize", placePopover);
+    window.visualViewport?.addEventListener("scroll", placePopover);
     return () => {
       window.removeEventListener("resize", placePopover);
       window.removeEventListener("scroll", placePopover, true);
+      window.visualViewport?.removeEventListener("resize", placePopover);
+      window.visualViewport?.removeEventListener("scroll", placePopover);
     };
   }, [open]);
 
