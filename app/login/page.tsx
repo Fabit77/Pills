@@ -1,11 +1,12 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, BadgeCheck, Check, Mail, ShieldCheck, Sparkles, Users } from "lucide-react";
+import { ArrowLeft, ArrowRight, BadgeCheck, Check, FolderHeart, Mail, ShieldCheck, Sparkles, Users } from "lucide-react";
 import { FormEvent, Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 
 type AuthStep = "email" | "code";
+const fansCollectionUrl = `${process.env.NEXT_PUBLIC_PILLSFANS_URL || "https://pills-fans-web.vercel.app"}/collection`;
 
 export default function LoginPage() {
   return <Suspense fallback={<main className="landing-shell" />}><LoginContent /></Suspense>;
@@ -56,7 +57,7 @@ function LoginContent() {
     <main className="landing-shell">
       <nav className="landing-nav">
         <a className="landing-brand" href="/login"><span className="brand-mark"><span /></span><strong>Pills</strong><em>Creator Studio</em></a>
-        <a className="nav-login" href={signedProfile ? "/studio" : "#access"}>{signedProfile ? "Crear coleccionable" : "Iniciar sesión o crear cuenta"} <ArrowRight size={15} /></a>
+        <div className="landing-nav-actions"><a className="nav-collection" href={fansCollectionUrl}><FolderHeart size={15} />Mi colección</a><a className="nav-login" href={signedProfile ? "/studio" : "#access"}>{signedProfile ? "Crear coleccionable" : "Iniciar sesión o crear cuenta"} <ArrowRight size={15} /></a></div>
       </nav>
       <section className="landing-hero">
         <div className="landing-copy">
