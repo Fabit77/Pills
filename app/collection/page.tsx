@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
 export default function FanCollectionRedirect() {
-  redirect("https://pills-fans-web.vercel.app/collection");
+  const fansUrl = process.env.NEXT_PUBLIC_PILLSFANS_URL || "https://fans.pills.social";
+  redirect(`${fansUrl}/collection`);
 }

@@ -29,7 +29,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     ]);
     const email = authUser.user?.email;
     if (email) {
-      const fansUrl = process.env.NEXT_PUBLIC_PILLSFANS_URL || "https://pills-fans-web.vercel.app";
+      const fansUrl = process.env.NEXT_PUBLIC_PILLSFANS_URL || "https://fans.pills.social";
       const result = await sendCollectibleApprovedEmail({ campaignId: campaign.id, to: email, campaignName: campaign.name, creatorName: profile?.first_name || profile?.full_name || publicName?.username || "creador", collectUrl: `${fansUrl}/collect/${campaign.public_slug}` });
       emailSent = result.sent;
       if (result.sent) await service.from("campaigns").update({ approval_email_sent_at: new Date().toISOString(), approval_email_id: result.id }).eq("id", id);

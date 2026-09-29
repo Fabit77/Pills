@@ -20,7 +20,7 @@ type Campaign = {
 type AdminLink = { id: string; recipientLabel: string; tokenValue: string | null; redeemedAt: string | null; createdAt: string };
 type Collector = { claimId: string; userId: string; username: string | null; method: "qr" | "secret" | "admin_link"; claimedAt: string };
 
-const fansUrl = process.env.NEXT_PUBLIC_PILLSFANS_URL || "https://pills-fans-web.vercel.app";
+const fansUrl = process.env.NEXT_PUBLIC_PILLSFANS_URL || "https://fans.pills.social";
 const formatDate = (value: string) => new Date(`${value}T12:00:00`).toLocaleDateString("es-CL", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase();
 const statusClass = (value: string) => value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s/g, "-");
 const localPart = (value: string | null, part: "date" | "time") => { if (!value) return ""; const date = new Date(value); const pad = (item: number) => String(item).padStart(2, "0"); return part === "date" ? `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` : `${pad(date.getHours())}:${pad(date.getMinutes())}`; };

@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 
 type AuthStep = "email" | "code";
-const fansCollectionUrl = `${process.env.NEXT_PUBLIC_PILLSFANS_URL || "https://pills-fans-web.vercel.app"}/collection`;
+const fansCollectionUrl = `${process.env.NEXT_PUBLIC_PILLSFANS_URL || "https://fans.pills.social"}/collection`;
 
 export default function LoginPage() {
   return <Suspense fallback={<main className="landing-shell" />}><LoginContent /></Suspense>;

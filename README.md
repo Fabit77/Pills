@@ -26,7 +26,7 @@ El acceso al Creator Studio usa códigos temporales por correo y Google mediante
 2. Copia `.env.example` a `.env.local` para desarrollo local.
 3. En Supabase Auth, configura el Site URL de producción y agrega estos Redirect URLs:
    - `http://localhost:3000/auth/callback`
-   - `https://pills-nu.vercel.app/auth/callback`
+   - `https://pills.social/auth/callback`
 4. Aplica `supabase/migrations/20260923010000_initial_creator_studio.sql`.
 5. Aplica `supabase/migrations/20260923020000_usernames_and_onboarding.sql`.
 6. En **Authentication → Emails → Magic Link**, usa `{{ .Token }}` en la plantilla para enviar el código de seis dígitos.
