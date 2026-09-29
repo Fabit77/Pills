@@ -95,12 +95,12 @@ export default function CreatorStudio() {
     }
   }
   const title = navItems.find((item) => item.id === view)?.label ?? "Inicio";
-  if (loading || !splashComplete) return <main className="studio-loading" aria-label="Cargando Pills">
+  if (loading || !splashComplete) return <main className="studio-loading" aria-label="Cargando">
     <div className="studio-loading-mark" aria-hidden="true">
       <Image className="studio-loading-logo studio-loading-logo-base" src="/brand/pills-logo-color.png" alt="" width={700} height={157} priority />
       <span className="studio-loading-color"><Image className="studio-loading-logo" src="/brand/pills-logo-color.png" alt="" width={700} height={157} priority /></span>
     </div>
-    <strong>Cargando Pills<span className="studio-loading-dots" aria-hidden="true">…</span></strong>
+    <strong>Cargando<span className="studio-loading-dots" aria-hidden="true">…</span></strong>
   </main>;
 
   return <main className="app-shell"><aside className={`sidebar ${showMenu ? "sidebar-open" : ""}`}><div className="brand"><PillsLogo context="Creator Studio" inverse /></div>
