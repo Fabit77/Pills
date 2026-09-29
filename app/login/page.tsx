@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, BadgeCheck, Check, FolderHeart, Mail, ShieldCheck, Sparkles, Users } from "lucide-react";
+import { ArrowLeft, ArrowRight, BarChart3, FolderHeart, Grid3X3, Mail, PencilRuler, ShieldCheck, Sparkles } from "lucide-react";
 import { FormEvent, Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
@@ -8,6 +8,7 @@ import { PillsLogo } from "@/components/pills-logo";
 
 type AuthStep = "email" | "code";
 const fansCollectionUrl = `${process.env.NEXT_PUBLIC_PILLSFANS_URL || "https://fans.pills.social"}/collection`;
+const fansHomeUrl = process.env.NEXT_PUBLIC_PILLSFANS_URL || "https://fans.pills.social";
 
 export default function LoginPage() {
   return <Suspense fallback={<main className="landing-shell" />}><LoginContent /></Suspense>;
@@ -55,33 +56,39 @@ function LoginContent() {
   }
 
   return (
-    <main className="landing-shell">
-      <nav className="landing-nav">
-        <a className="landing-brand" href="/login"><PillsLogo context="Creator Studio" /></a>
-        <div className="landing-nav-actions"><a className="nav-collection" href={fansCollectionUrl}><FolderHeart size={15} />Mi colección</a><a className="nav-login" href={signedProfile ? "/studio" : "#access"}>{signedProfile ? "Crear coleccionable" : "Iniciar sesión o crear cuenta"} <ArrowRight size={15} /></a></div>
+    <main className="landing-shell creator-landing-v2">
+      <nav className="creator-v2-nav">
+        <a className="landing-brand" href="/login"><PillsLogo /></a>
+        <div className="creator-v2-links"><a href={fansHomeUrl}>Explorar</a><a href="#studio">Creator Studio</a><a href="#como-funciona">Cómo funciona</a></div>
+        <a className="creator-v2-start" href={signedProfile ? "/studio" : "#access"}>{signedProfile ? "Ir al Studio" : "Comenzar"}<ArrowRight /></a>
       </nav>
-      <section className="landing-hero">
-        <div className="landing-copy">
-          <span className="section-kicker"><span /> CREATOR STUDIO</span>
-          <h1>Haz que tu evento<br />se quede con ellos.</h1>
-          <p>Crea recuerdos digitales coleccionables para conciertos, partidos y experiencias de marca. Una nueva forma de extender la relación con tus fans.</p>
-          <div className="landing-benefits"><span><Check />Crea y publica coleccionables</span><span><Check />Invita colaboradores</span><span><Check />Mide colección y recurrencia</span></div>
-          <div className="trust-row"><div className="trust-avatars"><i>LN</i><i>AF</i><i>H</i></div><span>Experiencias creadas por artistas,<br />clubes y equipos de marketing.</span></div>
+
+      <section className="creator-v2-hero">
+        <div className="creator-v2-hero-copy"><span className="creator-v2-eyebrow">PILLS CREATOR STUDIO</span><h1>Haz que tus<br />experiencias<br />continúen.</h1><h2>Crea algo que quieran guardar.</h2><p>Convierte conciertos, partidos, encuentros y activaciones en recuerdos digitales coleccionables.</p><a className="creator-v2-button" href={signedProfile ? "/studio" : "#access"}>{signedProfile ? "Crear una Pill" : "Comenzar"}<ArrowRight /></a></div>
+        <div className="creator-phone-scene" aria-label="Vista previa del perfil de un fan con sus Pills">
+          <span className="creator-hero-wave" />
+          <article className="creator-phone">
+            <header><b>9:41</b><span /></header>
+            <div className="creator-phone-profile"><i>R</i><div><strong>Roberto</strong><small>@robertox</small></div></div>
+            <div className="creator-phone-stats"><span><strong>125</strong>Pills coleccionadas</span><span><strong>48</strong>Momentos compartidos</span></div>
+            <div className="creator-phone-tabs"><b>Pills</b><span>Momentos</span></div>
+            <div className="creator-phone-grid"><PillImage src="/pills/aysen-futuro-final.webp" alt="Pill Aysén Futuro" /><PillImage src="/pills/asadao-final.webp" alt="Pill AsaDAO" /><PillImage src="/pills/campus-on-chain.webp" alt="Pill Campus on Chain" /><PillImage src="/pills/asadao-42.webp" alt="Pill AsaDAO" /><PillImage src="/pills/campus-on-chain.webp" alt="Pill Campus" /><PillImage src="/pills/aysen-futuro-final.webp" alt="Pill Aysén" /></div>
+          </article>
+          <PillImage className="creator-float-pill creator-float-one" src="/pills/aysen-futuro-final.webp" alt="Pill flotante" /><PillImage className="creator-float-pill creator-float-two" src="/pills/asadao-final.webp" alt="Pill flotante" /><PillImage className="creator-float-pill creator-float-three" src="/pills/campus-on-chain.webp" alt="Pill flotante" />
+          <em className="creator-hand-note">CREA<br />LO QUE<br />CONTINÚA</em>
         </div>
-        <div className="access-stage" id="access">
-          <div className="orbit orbit-one orbit-track orbit-track-one">
-            <span className="orbital-art"><Image src="/pills/aysen-futuro-final.webp" alt="Pill Aysén Futuro" fill sizes="120px" loading="eager" unoptimized /></span>
-          </div>
-          <div className="orbit orbit-two orbit-track orbit-track-two">
-            <span className="orbital-art"><Image src="/pills/asadao-final.webp" alt="Pill AsaDAO" fill sizes="120px" loading="eager" unoptimized /></span>
-          </div>
-          <div className="orbit orbit-track orbit-track-three">
-            <span className="orbital-art"><Image src="/pills/campus-on-chain.webp" alt="Pill Campus on Chain" fill sizes="120px" unoptimized /></span>
-          </div>
-          <div className="orbit orbit-track orbit-track-four">
-            <span className="orbital-art"><Image src="/pills/asadao-42.webp" alt="Pill AsaDAO 42" fill sizes="120px" priority unoptimized /></span>
-          </div>
-          <article className="access-card">
+      </section>
+
+      <section className="creator-how" id="como-funciona"><span className="creator-v2-eyebrow">ASÍ FUNCIONA</span><div className="creator-how-grid"><article><small>01</small><h2>Crea</h2><p>Diseña una Pill para la experiencia que quieres extender.</p><PillImage src="/pills/aysen-futuro-final.webp" alt="Pill de concierto" /></article><article><small>02</small><h2>Distribuye</h2><p>Comparte por QR, enlace o una frase secreta.</p><PillImage src="/pills/campus-on-chain.webp" alt="Pill distribuida" /></article><article><small>03</small><h2>Construye comunidad</h2><p>Cada colección mantiene viva la relación con tu audiencia.</p><PillImage src="/pills/asadao-final.webp" alt="Pill de comunidad" /></article></div></section>
+
+      <section className="creator-identity"><div><span className="creator-v2-eyebrow">UNA HISTORIA QUE CRECE</span><h2>Una colección de<br />lo que los define.</h2><p>Tus eventos. Sus recuerdos. Una identidad compartida que puede seguir creciendo mucho después del encuentro.</p><a className="creator-v2-button" href="#access">Comenzar <ArrowRight /></a></div><div className="creator-pill-cloud"><PillImage src="/pills/aysen-futuro-final.webp" alt="Pill" /><PillImage src="/pills/asadao-final.webp" alt="Pill" /><PillImage src="/pills/campus-on-chain.webp" alt="Pill" /><PillImage src="/pills/asadao-42.webp" alt="Pill" /><PillImage src="/pills/campus-on-chain.webp" alt="Pill" /><PillImage src="/pills/aysen-futuro-final.webp" alt="Pill" /><PillImage src="/pills/asadao-final.webp" alt="Pill" /></div></section>
+
+      <section className="creator-moments"><div><span className="creator-v2-eyebrow">MOMENTOS COMPARTIDOS</span><h2>Lo vivido se<br />vuelve comunidad.</h2><p>Cada Pill conecta personas alrededor de una experiencia real.</p></div><div className="creator-moment-gallery"><PillImage src="/pills/aysen-futuro-final.webp" alt="Momento de evento" /><PillImage src="/pills/asadao-42.webp" alt="Momento compartido" /><PillImage src="/pills/campus-on-chain.webp" alt="Momento de comunidad" /><PillImage src="/pills/asadao-final.webp" alt="Momento coleccionable" /></div></section>
+
+      <section className="creator-studio-showcase" id="studio"><div className="creator-studio-mock"><header><PillsLogo /><span>Creator Studio</span></header><div className="creator-studio-body"><aside><i /><i /><i /><i /></aside><div><span>Mis Pills</span><h3>Creator Studio</h3><div className="creator-studio-tools"><b><PencilRuler />Diseña</b><b><Grid3X3 />Organiza</b><b><BarChart3 />Mide</b></div><div className="creator-studio-pills"><i>+</i><PillImage src="/pills/aysen-futuro-final.webp" alt="Pill" /><PillImage src="/pills/asadao-final.webp" alt="Pill" /><PillImage src="/pills/campus-on-chain.webp" alt="Pill" /></div></div></div></div><div className="creator-studio-copy"><span className="creator-v2-eyebrow">PARA CREADORES</span><h2>Creator<br />Studio</h2><p>Crea, diseña y organiza tus propias Pills. Trabaja con tu equipo, publícalas y entiende cómo crece cada colección.</p><a href="#access">Conoce Creator Studio <ArrowRight /></a></div></section>
+
+      <section className="creator-access" id="access"><div className="creator-access-intro"><span className="creator-v2-eyebrow">EMPIEZA A CREAR</span><h2>Convierte una experiencia en algo que se queda.</h2><p>Abre tu espacio de Creator Studio y crea tu primera Pill.</p><div className="creator-access-pills"><PillImage src="/pills/asadao-final.webp" alt="Pill" /><PillImage src="/pills/aysen-futuro-final.webp" alt="Pill" /></div></div>
+          <article className="access-card creator-v2-access-card">
             {signedProfile ? <>
               <span className="access-icon"><Sparkles /></span><span className="eyebrow">TU CUENTA DE CREADOR</span>
               <h2>Hola, @{signedProfile.username}.</h2>
@@ -110,15 +117,14 @@ function LoginContent() {
             </>}
             <div className="security-note"><ShieldCheck /><span>Tu correo siempre es privado. Solo tu nombre de usuario será público.</span></div>
           </article>
-        </div>
       </section>
-      <section className="landing-strip">
-        <div><BadgeCheck /><span><strong>Identidad verificada</strong>Las personas reconocen al creador oficial.</span></div>
-        <div><Users /><span><strong>Equipos y colaboradores</strong>Crea junto a artistas, marcas y partners.</span></div>
-        <div><Sparkles /><span><strong>Una historia que continúa</strong>Cada experiencia pasa a formar parte de una colección.</span></div>
-      </section>
+      <footer className="creator-v2-footer"><PillsLogo inverse /><nav><a href={fansHomeUrl}>Explorar</a><a href="#studio">Creator Studio</a><a href="#como-funciona">Cómo funciona</a></nav><a href={fansCollectionUrl}><FolderHeart />Ver mi colección</a></footer>
     </main>
   );
+}
+
+function PillImage({ src, alt, className = "" }: { src: string; alt: string; className?: string }) {
+  return <span className={`creator-pill-image ${className}`.trim()}><Image src={src} alt={alt} fill sizes="220px" unoptimized /></span>;
 }
 
 function GoogleMark() {
