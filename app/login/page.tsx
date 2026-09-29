@@ -64,7 +64,7 @@ function LoginContent() {
       </nav>
 
       <section className="creator-v2-hero">
-        <div className="creator-v2-hero-copy"><h1>Tus<br />experiencias<br /><span>cuentan</span><br />tu historia.</h1><h2>Colecciona, organiza y revive</h2><p>los momentos que te definen.</p><a className="creator-v2-button" href={signedProfile ? "/studio" : "#access"}>{signedProfile ? "Crear una Pill" : "Comenzar"}<ArrowRight /></a></div>
+        <div className="creator-v2-hero-copy"><h1>Tus<br />experiencias<br /><span>cuentan</span><br />tu historia.</h1><h2>Colecciona, organiza y revive<span>los momentos que te definen.</span></h2><a className="creator-v2-button" href={signedProfile ? "/studio" : "#access"}>{signedProfile ? "Crear una Pill" : "Comenzar"}<ArrowRight /></a></div>
         <div className="creator-phone-scene" aria-label="Vista previa del perfil de un fan con sus Pills">
           <span className="creator-hero-wave" />
           <article className="creator-phone">
