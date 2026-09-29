@@ -6,7 +6,7 @@ import { encryptPrivateValue } from "@/lib/private-values";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { normalizeWebsiteUrl } from "@/lib/website";
 
-const columns = "id,name,description,event_type,venue,starts_at,ends_at,event_url,supply,status,artwork_url,qr_enabled,qr_token,secret_word_hash,public_slug,review_status,submitted_at,rejection_reason,claimed_count,first_claimed_at,is_paused,created_by,created_at";
+const columns = "id,collection_id,name,description,event_type,venue,starts_at,ends_at,event_url,supply,status,artwork_url,qr_enabled,qr_token,secret_word_hash,public_slug,review_status,submitted_at,rejection_reason,claimed_count,first_claimed_at,is_paused,created_by,created_at";
 
 async function removeArtwork(artworkUrl: string) {
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;

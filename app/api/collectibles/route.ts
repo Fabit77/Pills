@@ -4,8 +4,9 @@ import { campaignJson, hashValue } from "@/lib/collectibles";
 import { ArtworkError, optimizeArtwork } from "@/lib/artwork";
 import { decryptPrivateValue, encryptPrivateValue } from "@/lib/private-values";
 import { normalizeWebsiteUrl } from "@/lib/website";
+import { serviceClient } from "@/lib/admin-access";
 
-const campaignColumns = "id,name,description,event_type,venue,starts_at,ends_at,event_url,supply,status,artwork_url,qr_enabled,qr_token,secret_word_hash,public_slug,review_status,submitted_at,rejection_reason,claimed_count,first_claimed_at,is_paused,created_by,created_at";
+const campaignColumns = "id,collection_id,name,description,event_type,venue,starts_at,ends_at,event_url,supply,status,artwork_url,qr_enabled,qr_token,secret_word_hash,public_slug,review_status,submitted_at,rejection_reason,claimed_count,first_claimed_at,is_paused,created_by,created_at";
 const MAX_ARTWORK_BYTES = 4 * 1024 * 1024;
 
 async function requireUser() {
@@ -83,7 +84,13 @@ export async function POST(request: Request) {
     if (Number.isNaN(new Date(startsAtIso).getTime()) || (endsAtIso && Number.isNaN(new Date(endsAtIso).getTime()))) return NextResponse.json({ error: "Revisa la fecha y la hora." }, { status: 400 });
     if (endsAtIso && new Date(endsAtIso) <= new Date(startsAtIso)) return NextResponse.json({ error: "La fecha y hora de término deben ser posteriores al inicio." }, { status: 400 });
 
-    let { data: membership } = await supabase.from("organization_members").select("organization_id").eq("user_id", user.id).limit(1).maybeSingle();
+    const admin = serviceClient();
+    const { data: memberships } = await admin.from("organization_members").select("organization_id").eq("user_id", user.id);
+    const membershipIds = (memberships ?? []).map((item) => item.organization_id);
+    const { data: personalOrganization } = membershipIds.length
+      ? await admin.from("organizations").select("id").in("id", membershipIds).eq("kind", "personal").limit(1).maybeSingle()
+      : { data: null };
+    let membership = personalOrganization ? { organization_id: personalOrganization.id } : null;
     if (!membership) {
       const { data: publicName } = await supabase.from("public_usernames").select("username").eq("user_id", user.id).single();
       const slug = `${publicName?.username ?? "creator"}-${user.id.slice(0, 8)}`;

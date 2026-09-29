@@ -31,6 +31,7 @@ export function campaignJson(row: Record<string, unknown>, collaborators: Campai
 
   return {
     id: row.id,
+    collectionId: row.collection_id ?? null,
     name: row.name,
     description: row.description ?? "",
     eventType: row.event_type,
