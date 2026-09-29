@@ -151,6 +151,7 @@ function Moderation({ onChanged, canDelete }: { onChanged: () => void; canDelete
     if (!selected) return; setSaving(true); setActionMessage("");
     const response = await fetch(`/api/admin/collectibles/${selected.id}/review`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ decision, reason }) });
     const result = await response.json(); setSaving(false); if (!response.ok) { setActionMessage(result.error); return; } await finishAction();
+    setActionMessage(decision === "approved" ? result.emailSent ? "Pill aprobada y correo enviado al creador." : `Pill aprobada. ${result.emailWarning || "El aviso por correo quedó pendiente."}` : "Pill rechazada.");
   }
   async function setPaused(action: "pause" | "resume") {
     if (!selected) return; setSaving(true); setActionMessage("");
