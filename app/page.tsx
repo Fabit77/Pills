@@ -3,6 +3,7 @@
 import { Activity, ArrowRight, BadgeCheck, Bell, Building2, CalendarDays, Check, ChevronDown, CircleHelp, Crown, FolderHeart, Gauge, ImagePlus, LayoutDashboard, LockKeyhole, MapPin, Menu, MoreHorizontal, PauseCircle, Play, Plus, Search, Settings, ShieldCheck, Sparkles, TicketCheck, Trash2, UserCog, UserPlus, Users, X, Zap } from "lucide-react";
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { CITY_OPTIONS } from "@/lib/cities";
 import { ManageCampaignPanel } from "@/components/manage-campaign-panel";
 import { ArtworkCropper } from "@/components/artwork-cropper";
@@ -60,7 +61,7 @@ export default function CreatorStudio() {
   const router = useRouter();
   const [view, setView] = useState<View>("overview"); const [campaigns, setCampaigns] = useState<Campaign[]>([]); const [profile, setProfile] = useState<CreatorProfile | null>(null);
   const [showCreate, setShowCreate] = useState(false); const [managing, setManaging] = useState<Campaign | null>(null); const [showMenu, setShowMenu] = useState(false);
-  const [search, setSearch] = useState(""); const [toast, setToast] = useState(""); const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState(""); const [toast, setToast] = useState(""); const [loading, setLoading] = useState(true); const [splashComplete, setSplashComplete] = useState(false);
   const visibleAdminNav = useMemo(() => profile?.adminRole ? adminNav.filter((item) => profile.isSuperAdmin || item.id === "moderation" || item.id === "organizationReview" || (profile.adminRole === "admin" && item.id === "adminRoles")) : [], [profile]);
   const navItems = useMemo(() => [...baseNav, ...visibleAdminNav], [visibleAdminNav]);
   const filtered = useMemo(() => campaigns.filter((campaign) => `${campaign.name} ${campaign.eventType} ${campaign.venue}`.toLowerCase().includes(search.toLowerCase())), [campaigns, search]);
@@ -70,6 +71,7 @@ export default function CreatorStudio() {
     if (profileResponse.status === 401) { router.replace("/login"); return; } const profileData = await profileResponse.json(); if (!profileData.username) { router.replace("/onboarding"); return; }
     setProfile(profileData); const campaignData = await campaignsResponse.json(); if (campaignsResponse.ok) setCampaigns(campaignData.collectibles); else setToast(campaignData.error || "No pudimos cargar tus coleccionables"); setLoading(false);
   }).catch(() => { setToast("No pudimos cargar tu espacio"); setLoading(false); }); }, [router]);
+  useEffect(() => { const timer = window.setTimeout(() => setSplashComplete(true), 2600); return () => window.clearTimeout(timer); }, []);
   useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(""), 3200); return () => window.clearTimeout(timer); }, [toast]);
   async function createCampaign(body: FormData, intent: "draft" | "submit") {
     body.set("intent", intent);
@@ -93,7 +95,13 @@ export default function CreatorStudio() {
     }
   }
   const title = navItems.find((item) => item.id === view)?.label ?? "Inicio";
-  if (loading) return <main className="studio-loading"><PillsLogo compact /><strong>Cargando Pills…</strong></main>;
+  if (loading || !splashComplete) return <main className="studio-loading" aria-label="Cargando Pills">
+    <div className="studio-loading-mark" aria-hidden="true">
+      <Image className="studio-loading-logo studio-loading-logo-base" src="/brand/pills-logo-color.png" alt="" width={700} height={157} priority />
+      <span className="studio-loading-color"><Image className="studio-loading-logo" src="/brand/pills-logo-color.png" alt="" width={700} height={157} priority /></span>
+    </div>
+    <strong>Cargando Pills<span className="studio-loading-dots" aria-hidden="true">…</span></strong>
+  </main>;
 
   return <main className="app-shell"><aside className={`sidebar ${showMenu ? "sidebar-open" : ""}`}><div className="brand"><PillsLogo context="Creator Studio" inverse /></div>
     <button className="workspace-switch" onClick={() => setView("profile")}><span className="avatar avatar-orange">{profile?.username.slice(0, 2).toUpperCase()}</span><span><strong>@{profile?.username}</strong><small>Cuenta personal</small></span><ChevronDown size={15} /></button>
