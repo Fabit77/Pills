@@ -9,6 +9,7 @@ import { PillsLogo } from "@/components/pills-logo";
 type AuthStep = "email" | "code";
 const fansCollectionUrl = `${process.env.NEXT_PUBLIC_PILLSFANS_URL || "https://fans.pills.social"}/collection`;
 const fansHomeUrl = process.env.NEXT_PUBLIC_PILLSFANS_URL || "https://fans.pills.social";
+const fansExploreUrl = `${fansHomeUrl}/explore`;
 
 export default function LoginPage() {
   return <Suspense fallback={<main className="landing-shell" />}><LoginContent /></Suspense>;
@@ -59,7 +60,7 @@ function LoginContent() {
     <main className="landing-shell creator-landing-v2">
       <nav className="creator-v2-nav">
         <a className="landing-brand" href="/login"><PillsLogo /></a>
-        <div className="creator-v2-links"><a href={fansHomeUrl}>Explorar</a><a href="#studio">Creator Studio</a><a href="#como-funciona">Cómo funciona</a></div>
+        <div className="creator-v2-links"><a href={fansExploreUrl}>Explorar</a><a href="#studio">Creator Studio</a><a href="#como-funciona">Cómo funciona</a></div>
         <a className="creator-v2-start" href={signedProfile ? "/studio" : "#access"}>{signedProfile ? "Ir al Studio" : "Comenzar"}<ArrowRight /></a>
       </nav>
 
@@ -110,7 +111,7 @@ function LoginContent() {
             <div className="security-note"><ShieldCheck /><span>Tu correo siempre es privado. Solo tu nombre de usuario será público.</span></div>
           </article>
       </section>
-      <footer className="creator-v2-footer"><PillsLogo inverse /><nav><a href={fansHomeUrl}>Explorar</a><a href="#studio">Creator Studio</a><a href="#como-funciona">Cómo funciona</a></nav><a href={fansCollectionUrl}><FolderHeart />Ver mi colección</a></footer>
+      <footer className="creator-v2-footer"><PillsLogo inverse /><nav><a href={fansExploreUrl}>Explorar</a><a href="#studio">Creator Studio</a><a href="#como-funciona">Cómo funciona</a></nav><a href={fansCollectionUrl}><FolderHeart />Ver mi colección</a></footer>
     </main>
   );
 }
