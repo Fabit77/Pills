@@ -97,8 +97,8 @@ export default function CreatorStudio() {
   const title = navItems.find((item) => item.id === view)?.label ?? "Inicio";
   if (loading || !splashComplete) return <main className="studio-loading" aria-label="Cargando">
     <div className="studio-loading-mark" aria-hidden="true">
-      <Image className="studio-loading-logo studio-loading-logo-base" src="/brand/pills-logo-color.png" alt="" width={700} height={157} priority />
-      <span className="studio-loading-color"><Image className="studio-loading-logo" src="/brand/pills-logo-color.png" alt="" width={700} height={157} priority /></span>
+      <Image className="studio-loading-logo studio-loading-logo-base" src="/brand/pills-logo-official.png" alt="" width={1400} height={287} priority />
+      <span className="studio-loading-color"><Image className="studio-loading-logo" src="/brand/pills-logo-official.png" alt="" width={1400} height={287} priority /></span>
     </div>
     <strong>Cargando<span className="studio-loading-dots" aria-hidden="true">…</span></strong>
   </main>;
