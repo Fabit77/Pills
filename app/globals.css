@@ -251,8 +251,10 @@ html,body{background:var(--pills-white);color:var(--pills-black)}
 .pills-logo-inverse{padding:7px 9px;background:#fff;border-radius:12px}.pills-logo-inverse em{color:#646773}
 .pills-logo-compact .pills-logo-image{width:154px}
 .sidebar{background:var(--pills-black);border-right:1px solid #25262b;padding-top:22px}
-.brand{height:58px;padding:0 2px;margin-bottom:20px}
-.brand .pills-logo{width:100%}.brand .pills-logo em{margin-left:auto}
+.brand{height:auto;min-height:78px;padding:2px 7px 0;margin-bottom:20px;align-items:flex-start;overflow:visible}
+.brand .pills-logo{width:auto;max-width:100%;padding:0;background:transparent;border-radius:0;flex-direction:column;align-items:flex-start;gap:8px;overflow:visible}
+.brand .pills-logo-image{width:148px;filter:brightness(0) invert(1)}
+.brand .pills-logo em{margin:0;color:#b5b7bf;font-size:8px;line-height:1.2;letter-spacing:.2em}
 .workspace-switch{background:#1b1d22;border-color:#2d3038;border-radius:var(--radius-md)}
 .sidebar nav button,.sidebar-bottom>button{border-radius:11px;transition:background .16s,color .16s,transform .16s}
 .sidebar nav button:hover{transform:translateX(2px)}
@@ -301,7 +303,7 @@ html,body{background:var(--pills-white);color:var(--pills-black)}
 .avatar-orange{background:var(--pills-blue)}
 .collection-link-button:hover,.nav-collection:hover{border-color:#8db2ff;color:var(--pills-blue-dark)}
 @media(max-width:760px){
-  .pills-logo-image{width:112px}.brand .pills-logo em{display:inline;margin-left:auto}.pills-logo-inverse{padding:6px 8px}
+  .pills-logo-image{width:112px}.brand .pills-logo em{display:block;margin:0}.pills-logo-inverse{padding:6px 8px}
   .welcome,.page-intro{padding-bottom:18px}.welcome h2,.page-intro h2{letter-spacing:-2.2px}
   .campaign-art-wrap{height:210px}
 }
