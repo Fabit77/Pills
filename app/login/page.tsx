@@ -100,7 +100,7 @@ function LoginContent() {
     <main className="landing-shell creator-landing-v2">
       <nav className="creator-v2-nav">
         <a className="landing-brand" href="/login"><PillsLogo /></a>
-        <div className="creator-v2-links"><a href={fansExploreUrl}>Explorar</a><a href="#studio">Creator Studio</a><a href="#como-funciona">Cómo funciona</a></div>
+        <div className="creator-v2-links"><a href={fansExploreUrl}>Explorar</a><a href="/como-funciona">Cómo funciona</a></div>
         <div className="creator-v2-actions">
           <a className="creator-v2-collection" href={fansCollectionUrl}><FolderHeart /><span>Ver colección</span></a>
           <button className="creator-v2-start" type="button" onClick={openCreatorAccess}>Crear una Pill<ArrowRight /></button>
@@ -126,7 +126,7 @@ function LoginContent() {
       <section className="creator-access"><div className="creator-access-intro"><h2>Convierte una experiencia en algo que se queda.</h2><p>Abre tu espacio de Creator Studio y crea tu primera Pill.</p><div className="creator-access-pills"><PillImage src="/pills/asadao-final.webp" alt="Pill" /><PillImage src="/pills/aysen-futuro-final.webp" alt="Pill" /></div></div>
         <div className="creator-access-choice"><Sparkles /><h3>¿Qué quieres hacer?</h3><p>Usa la misma cuenta para crear Pills o administrar tu colección.</p><button className="creator-v2-button" type="button" onClick={openCreatorAccess}>Crear una Pill <ArrowRight /></button><a href={fansCollectionUrl}><FolderHeart />Ver mi colección</a></div>
       </section>
-      <footer className="creator-v2-footer"><PillsLogo inverse /><nav><a href={fansExploreUrl}>Explorar</a><a href="#studio">Creator Studio</a><a href="#como-funciona">Cómo funciona</a></nav><a href={fansCollectionUrl}><FolderHeart />Ver mi colección</a></footer>
+      <footer className="creator-v2-footer"><PillsLogo inverse /><nav><a href={fansExploreUrl}>Explorar</a><a href="/como-funciona">Cómo funciona</a></nav><a href={fansCollectionUrl}><FolderHeart />Ver mi colección</a></footer>
 
       {accessOpen && <div className="creator-login-backdrop" onMouseDown={() => setAccessOpen(false)}>
         <div className="creator-login-dialog" role="dialog" aria-modal="true" aria-labelledby="creator-login-title" onMouseDown={(event) => event.stopPropagation()}>
