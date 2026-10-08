@@ -1,74 +1,30 @@
-import Image from "next/image";
 import type { Metadata } from "next";
-import { ArrowRight, Check, FolderHeart, Link2, LockKeyhole, Palette, QrCode, Sparkles, Users } from "lucide-react";
+import { ArrowRight, Check, FolderHeart, ImagePlus, LogIn, MapPin, QrCode, Send, TicketCheck } from "lucide-react";
 import { PillsLogo } from "@/components/pills-logo";
 
 const fansHomeUrl = process.env.NEXT_PUBLIC_PILLSFANS_URL || "https://fans.pills.social";
 
 export const metadata: Metadata = {
-  title: "Cómo funciona — Pills",
-  description: "Aprende a crear, publicar, compartir y coleccionar una Pill.",
+  title: "Cómo crear una Pill — Pills",
+  description: "Guía paso a paso para crear, enviar y publicar tu primera Pill.",
 };
 
 const steps = [
-  {
-    number: "01",
-    icon: Palette,
-    title: "Crea tu Pill",
-    description: "Sube una imagen, agrega el nombre de la experiencia y define la información que quieres conservar.",
-  },
-  {
-    number: "02",
-    icon: Sparkles,
-    title: "Configura la experiencia",
-    description: "Elige su disponibilidad, fecha y forma de acceso. La frase secreta es opcional.",
-  },
-  {
-    number: "03",
-    icon: QrCode,
-    title: "Publícala y compártela",
-    description: "Distribuye la Pill con un enlace, un código QR o una frase secreta cuando quieras limitar el acceso.",
-  },
-  {
-    number: "04",
-    icon: FolderHeart,
-    title: "Haz crecer la colección",
-    description: "Las personas guardan la Pill en su perfil y construyen una colección con las experiencias que las definen.",
-  },
+  { number: "01", icon: LogIn, title: "Entra a tu cuenta", intro: <>Presiona <strong>Crear una Pill</strong> e inicia sesión con Google o con tu correo.</>, items: ["Si ya tienes una sesión activa, entrarás directamente al Creator Studio.", "Si es tu primera vez, completa tu nombre de usuario."] },
+  { number: "02", icon: ImagePlus, title: "Completa Detalles", intro: <>En el Creator Studio, selecciona <strong>Nueva Pill</strong> y completa la primera etapa.</>, items: ["Sube una imagen PNG, JPG, WEBP o GIF de hasta 4 MB.", "Escribe el nombre y la descripción.", "Indica fecha y hora de inicio; el término es opcional."] },
+  { number: "03", icon: MapPin, title: "Agrega Propiedades", intro: <>Indica dónde ocurrió la experiencia y, si corresponde, quién participó.</>, items: ["Selecciona una ciudad; este campo es obligatorio.", "Artistas, organizaciones y sitio web son opcionales.", "Los créditos no entregan permisos de administración."] },
+  { number: "04", icon: TicketCheck, title: "Define la Emisión", intro: <>Elige cuántas personas podrán coleccionar esta Pill.</>, items: ["Puedes crear entre 1 y 100 unidades.", "El arte, las fechas y la emisión quedan fijos al enviar.", "El título y la descripción se bloquean después de la primera colección."] },
+  { number: "05", icon: QrCode, title: "Configura la Distribución", intro: <>Elige cómo podrán acceder las personas a la Pill.</>, items: ["Mantén activo el código QR o agrega una frase secreta.", "La frase secreta es opcional; no la necesitas para publicar.", "Crea un enlace usando exactamente tres palabras separadas por guiones."] },
+  { number: "06", icon: Send, title: "Guarda o envía", intro: <>Revisa la información y elige qué hacer con tu Pill.</>, items: ["Guardar borrador: podrás continuar editándola después.", "Enviar a Curaduría: quedará pendiente de revisión.", "Cuando sea aprobada, podrás compartir el enlace y descargar el QR."] },
 ];
 
 export default function HowItWorksPage() {
-  return <main className="how-page">
-    <nav className="how-nav">
-      <a className="landing-brand" href="/login"><PillsLogo /></a>
-      <div><a href={`${fansHomeUrl}/explore`}>Explorar</a><a href="/collection">Ver colección</a><a className="how-nav-cta" href="/login?access=creator">Crear una Pill <ArrowRight /></a></div>
-    </nav>
-
-    <header className="how-hero">
-      <div><span className="how-eyebrow">CÓMO FUNCIONA</span><h1>De una experiencia<br />a una Pill.</h1><p>Crea un recuerdo digital, compártelo con tu comunidad y permite que cada persona lo guarde en su propia colección.</p><a className="how-primary" href="/login?access=creator">Crear mi primera Pill <ArrowRight /></a></div>
-      <div className="how-hero-art" aria-hidden="true"><Image src="/landing/pills-fans-hero-transparent.png" alt="" width={1024} height={1536} priority /></div>
-    </header>
-
-    <section className="how-steps" aria-labelledby="how-steps-title">
-      <div className="how-section-heading"><span className="how-eyebrow">PASO A PASO</span><h2 id="how-steps-title">Crear una Pill es simple.</h2></div>
-      <div className="how-step-grid">{steps.map((step) => <article key={step.number}><small>{step.number}</small><span><step.icon /></span><h3>{step.title}</h3><p>{step.description}</p></article>)}</div>
-    </section>
-
-    <section className="how-paths">
-      <article className="how-path how-path-dark"><span><Users /></span><small>PARA CREADORES</small><h2>Convierte una experiencia en comunidad.</h2><ul><li><Check />Crea y administra tus Pills.</li><li><Check />Comparte por enlace, QR o frase secreta.</li><li><Check />Conoce cuántas personas las coleccionaron.</li></ul><a href="/login?access=creator">Comenzar a crear <ArrowRight /></a></article>
-      <article className="how-path"><span><FolderHeart /></span><small>PARA COLECCIONISTAS</small><h2>Guarda lo que viviste.</h2><ul><li><Check />Colecciona Pills públicas o privadas.</li><li><Check />Organiza tus recuerdos en un solo lugar.</li><li><Check />Gestiona tu perfil y tu colección.</li></ul><a href="/collection">Ver mi colección <ArrowRight /></a></article>
-    </section>
-
-    <section className="how-privacy">
-      <div><span><LockKeyhole /></span><h2>Tu colección también protege tu privacidad.</h2></div>
-      <p>En Explorar se puede ver quién creó una Pill, cuándo fue creada y cuántas personas la coleccionaron. Solo quienes poseen esa Pill pueden ver a los demás coleccionistas.</p>
-    </section>
-
-    <section className="how-distribution">
-      <div><span className="how-eyebrow">TÚ ELIGES CÓMO COMPARTIRLA</span><h2>Una Pill para cada tipo de experiencia.</h2></div>
-      <div className="how-distribution-grid"><article><Link2 /><h3>Enlace directo</h3><p>Ideal para compartir en redes, mensajes o una comunidad online.</p></article><article><QrCode /><h3>Código QR</h3><p>Perfecto para eventos y espacios físicos donde las personas están presentes.</p></article><article><LockKeyhole /><h3>Frase secreta</h3><p>Una capa opcional para experiencias que quieres compartir con un grupo específico.</p></article></div>
-    </section>
-
-    <section className="how-final"><PillsLogo inverse /><h2>Tu próxima experiencia puede convertirse en una Pill.</h2><a href="/login?access=creator">Crear una Pill <ArrowRight /></a></section>
+  return <main className="guide-page">
+    <nav className="how-nav"><a className="landing-brand" href="/login"><PillsLogo /></a><div><a href={`${fansHomeUrl}/explore`}>Explorar</a><a href="/collection">Ver colección</a><a className="how-nav-cta" href="/login?access=creator">Crear una Pill <ArrowRight /></a></div></nav>
+    <header className="guide-hero"><span>GUÍA PASO A PASO</span><h1>Cómo crear tu<br />primera Pill.</h1><p>Sigue estos pasos en orden. Puedes guardar un borrador en cualquier momento antes de enviarlo a Curaduría.</p><a href="/login?access=creator">Abrir Creator Studio <ArrowRight /></a></header>
+    <section className="guide-steps" aria-label="Pasos para crear una Pill">{steps.map((step) => <article key={step.number}><div className="guide-step-number">{step.number}</div><div className="guide-step-icon"><step.icon /></div><div className="guide-step-copy"><h2>{step.title}</h2><p>{step.intro}</p><ul>{step.items.map((item) => <li key={item}><Check />{item}</li>)}</ul></div></article>)}</section>
+    <section className="guide-result"><div><span>DESPUÉS DE LA APROBACIÓN</span><h2>Tu Pill queda lista para coleccionar.</h2></div><ol><li><b>1</b><span><strong>Comparte</strong>Envía el enlace o muestra el código QR.</span></li><li><b>2</b><span><strong>Colecciona</strong>La persona inicia sesión y agrega la Pill a su colección.</span></li><li><b>3</b><span><strong>Gestiona</strong>Revisa cuántas personas la coleccionaron desde Creator Studio.</span></li></ol></section>
+    <section className="guide-note"><QrCode /><div><strong>Importante</strong><p>El enlace y el QR se habilitan en la fecha y hora de inicio y dejan de aceptar nuevas colecciones al terminar la experiencia. Si no agregaste fecha de término, seguirá disponible.</p></div></section>
+    <footer className="guide-footer"><PillsLogo className="guide-footer-logo" /><span>¿Listo para comenzar?</span><div><a href="/collection"><FolderHeart />Ver colección</a><a href="/login?access=creator">Crear una Pill <ArrowRight /></a></div></footer>
   </main>;
 }
