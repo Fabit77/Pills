@@ -24,13 +24,18 @@ function LoginContent() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [signedProfile, setSignedProfile] = useState<{ username: string } | null>(null);
-  const [accessOpen, setAccessOpen] = useState(searchParams.get("access") === "creator" || Boolean(searchParams.get("error")));
+  const [checkingSession, setCheckingSession] = useState(true);
+  const requestedAccess = searchParams.get("access") === "creator" || Boolean(searchParams.get("error"));
+  const [accessOpen, setAccessOpen] = useState(requestedAccess);
 
   useEffect(() => {
     fetch("/api/profile/me").then(async (response) => response.ok ? response.json() : null).then((data) => {
-      if (data?.username) setSignedProfile({ username: data.username });
-    }).catch(() => undefined);
-  }, []);
+      if (data?.username) {
+        if (requestedAccess) router.replace("/studio");
+        else setSignedProfile({ username: data.username });
+      }
+    }).catch(() => undefined).finally(() => setCheckingSession(false));
+  }, [requestedAccess, router]);
 
   useEffect(() => {
     if (!accessOpen) return;
@@ -46,10 +51,22 @@ function LoginContent() {
     };
   }, [accessOpen]);
 
-  function openCreatorAccess() {
+  async function openCreatorAccess() {
     if (signedProfile) {
       router.push("/studio");
       return;
+    }
+    if (checkingSession) {
+      try {
+        const response = await fetch("/api/profile/me", { cache: "no-store" });
+        const profile = response.ok ? await response.json() : null;
+        if (profile?.username) {
+          setSignedProfile({ username: profile.username });
+          router.push("/studio");
+          return;
+        }
+      } catch { /* The login modal remains available when session lookup fails. */ }
+      finally { setCheckingSession(false); }
     }
     setAccessOpen(true);
   }
@@ -85,7 +102,7 @@ function LoginContent() {
         <a className="landing-brand" href="/login"><PillsLogo /></a>
         <div className="creator-v2-links"><a href={fansExploreUrl}>Explorar</a><a href="#studio">Creator Studio</a><a href="#como-funciona">Cómo funciona</a></div>
         <div className="creator-v2-actions">
-          <a className="creator-v2-collection" href={fansCollectionUrl}><FolderHeart /><span>Ver mi colección</span></a>
+          <a className="creator-v2-collection" href={fansCollectionUrl}><FolderHeart /><span>Ver colección</span></a>
           <button className="creator-v2-start" type="button" onClick={openCreatorAccess}>Crear una Pill<ArrowRight /></button>
         </div>
       </nav>

@@ -363,12 +363,12 @@ html,body{background:var(--pills-white);color:var(--pills-black)}
 
 @media(max-width:760px){
   .creator-v2-nav{grid-template-columns:1fr auto;padding:0 12px 0 17px}
-  .creator-v2-nav .landing-brand .pills-logo-image{width:112px}
+  .creator-v2-nav .landing-brand .pills-logo-image{width:100px}
   .creator-v2-actions{gap:5px}
-  .creator-v2-start{height:38px;padding:0 12px;font-size:10px}
+  .creator-v2-start{height:38px;padding:0 10px;font-size:9px}
   .creator-v2-start svg{display:none}
-  .creator-v2-collection{width:38px;height:38px;padding:0;justify-content:center}
-  .creator-v2-collection span{display:none}
-  .creator-v2-collection svg{width:17px}
+  .creator-v2-collection{width:auto;height:38px;padding:0 10px;justify-content:center;gap:5px;font-size:9px;white-space:nowrap}
+  .creator-v2-collection span{display:inline}
+  .creator-v2-collection svg{width:15px}
   .creator-access-choice{padding:28px 22px}
 }
