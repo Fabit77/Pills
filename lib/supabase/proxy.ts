@@ -15,13 +15,19 @@ export async function updateSession(request: NextRequest) {
   }
 
   let response = NextResponse.next({ request });
+  const hostname = request.nextUrl.hostname;
+  const sharedDomain = hostname === "pills.social" || hostname.endsWith(".pills.social") ? ".pills.social" : undefined;
   const supabase = createServerClient(url, key, {
     cookies: {
       getAll() { return request.cookies.getAll(); },
       setAll(cookiesToSet, headersToSet) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
         response = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, { ...options, maxAge: options.maxAge ?? 60 * 60 * 24 * 10 }));
+        cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, {
+          ...options,
+          ...(sharedDomain ? { domain: sharedDomain } : {}),
+          maxAge: options.maxAge ?? 60 * 60 * 24 * 10,
+        }));
         if (headersToSet) Object.entries(headersToSet).forEach(([name, value]) => response.headers.set(name, value));
       },
     },

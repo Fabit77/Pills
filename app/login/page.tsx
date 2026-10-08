@@ -1,13 +1,13 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, BarChart3, FolderHeart, Grid3X3, Mail, PencilRuler, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, BarChart3, FolderHeart, Grid3X3, Mail, PencilRuler, ShieldCheck, Sparkles, X } from "lucide-react";
 import { FormEvent, Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { PillsLogo } from "@/components/pills-logo";
 
 type AuthStep = "email" | "code";
-const fansCollectionUrl = `${process.env.NEXT_PUBLIC_PILLSFANS_URL || "https://fans.pills.social"}/collection`;
+const fansCollectionUrl = "/collection";
 const fansHomeUrl = process.env.NEXT_PUBLIC_PILLSFANS_URL || "https://fans.pills.social";
 const fansExploreUrl = `${fansHomeUrl}/explore`;
 
@@ -24,12 +24,35 @@ function LoginContent() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [signedProfile, setSignedProfile] = useState<{ username: string } | null>(null);
+  const [accessOpen, setAccessOpen] = useState(searchParams.get("access") === "creator" || Boolean(searchParams.get("error")));
 
   useEffect(() => {
     fetch("/api/profile/me").then(async (response) => response.ok ? response.json() : null).then((data) => {
       if (data?.username) setSignedProfile({ username: data.username });
     }).catch(() => undefined);
   }, []);
+
+  useEffect(() => {
+    if (!accessOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setAccessOpen(false);
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [accessOpen]);
+
+  function openCreatorAccess() {
+    if (signedProfile) {
+      router.push("/studio");
+      return;
+    }
+    setAccessOpen(true);
+  }
 
   const visibleMessage = message || (step === "email" && searchParams.get("error") === "google_unavailable"
     ? "El acceso con Google todavía no está habilitado. Puedes ingresar con tu correo."
@@ -61,11 +84,14 @@ function LoginContent() {
       <nav className="creator-v2-nav">
         <a className="landing-brand" href="/login"><PillsLogo /></a>
         <div className="creator-v2-links"><a href={fansExploreUrl}>Explorar</a><a href="#studio">Creator Studio</a><a href="#como-funciona">Cómo funciona</a></div>
-        <a className="creator-v2-start" href={signedProfile ? "/studio" : "#access"}>{signedProfile ? "Ir al Studio" : "Comenzar"}<ArrowRight /></a>
+        <div className="creator-v2-actions">
+          <a className="creator-v2-collection" href={fansCollectionUrl}><FolderHeart /><span>Ver mi colección</span></a>
+          <button className="creator-v2-start" type="button" onClick={openCreatorAccess}>Crear una Pill<ArrowRight /></button>
+        </div>
       </nav>
 
       <section className="creator-v2-hero">
-        <div className="creator-v2-hero-copy"><h1>Tus<br />experiencias<br /><span>cuentan</span><br />tu historia.</h1><h2>Colecciona, organiza y revive<span>los momentos que te definen.</span></h2><a className="creator-v2-button" href={signedProfile ? "/studio" : "#access"}>{signedProfile ? "Crear una Pill" : "Comenzar"}<ArrowRight /></a></div>
+        <div className="creator-v2-hero-copy"><h1>Tus<br />experiencias<br /><span>cuentan</span><br />tu historia.</h1><h2>Colecciona, organiza y revive<span>los momentos que te definen.</span></h2><button className="creator-v2-button" type="button" onClick={openCreatorAccess}>Crear una Pill<ArrowRight /></button></div>
         <div className="creator-phone-scene creator-hero-art" aria-label="Perfil de Pills rodeado de coleccionables">
           <Image className="creator-hero-orbit" src="/landing/pills-hero-orbit.png" alt="" width={1600} height={463} priority sizes="(max-width: 760px) 135vw, 75vw" aria-hidden="true" />
           <Image className="creator-hero-phone" src="/landing/pills-fans-hero-transparent.png" alt="Perfil de Roberto en Pills rodeado de sus coleccionables" width={1024} height={1536} priority sizes="(max-width: 760px) 100vw, 58vw" />
@@ -74,22 +100,29 @@ function LoginContent() {
 
       <section className="creator-how" id="como-funciona"><div className="creator-how-grid"><article><small>01</small><h2>Crea</h2><p>Diseña una Pill para la experiencia que quieres extender.</p><PillImage src="/pills/aysen-futuro-final.webp" alt="Pill de concierto" /></article><article><small>02</small><h2>Distribuye</h2><p>Comparte por QR, enlace o una frase secreta.</p><PillImage src="/pills/campus-on-chain.webp" alt="Pill distribuida" /></article><article><small>03</small><h2>Construye comunidad</h2><p>Cada colección mantiene viva la relación con tu audiencia.</p><PillImage src="/pills/asadao-final.webp" alt="Pill de comunidad" /></article></div></section>
 
-      <section className="creator-identity"><div><h2>Una colección de<br />lo que los define.</h2><p>Tus eventos. Sus recuerdos. Una identidad compartida que puede seguir creciendo mucho después del encuentro.</p><a className="creator-v2-button" href="#access">Comenzar <ArrowRight /></a></div><div className="creator-category-art"><Image src="/landing/pills-categories-transparent.png" alt="Categorías de Deportes, Cultura y Comunidad en Pills" width={598} height={800} sizes="(max-width: 760px) 100vw, 55vw" /></div></section>
+      <section className="creator-identity"><div><h2>Una colección de<br />lo que los define.</h2><p>Tus eventos. Sus recuerdos. Una identidad compartida que puede seguir creciendo mucho después del encuentro.</p><button className="creator-v2-button" type="button" onClick={openCreatorAccess}>Crear una Pill <ArrowRight /></button></div><div className="creator-category-art"><Image src="/landing/pills-categories-transparent.png" alt="Categorías de Deportes, Cultura y Comunidad en Pills" width={598} height={800} sizes="(max-width: 760px) 100vw, 55vw" /></div></section>
 
       <section className="creator-moments"><div><h2>Lo vivido se<br />vuelve comunidad.</h2><p>Cada Pill conecta personas alrededor de una experiencia real.</p></div><div className="creator-moment-gallery"><PillImage src="/pills/aysen-futuro-final.webp" alt="Momento de evento" /><PillImage src="/pills/asadao-42.webp" alt="Momento compartido" /><PillImage src="/pills/campus-on-chain.webp" alt="Momento de comunidad" /><PillImage src="/pills/asadao-final.webp" alt="Momento coleccionable" /></div></section>
 
-      <section className="creator-studio-showcase" id="studio"><div className="creator-studio-mock"><header><PillsLogo /><span>Creator Studio</span></header><div className="creator-studio-body"><aside><i /><i /><i /><i /></aside><div><span>Mis Pills</span><h3>Creator Studio</h3><div className="creator-studio-tools"><b><PencilRuler />Diseña</b><b><Grid3X3 />Organiza</b><b><BarChart3 />Mide</b></div><div className="creator-studio-pills"><i>+</i><PillImage src="/pills/aysen-futuro-final.webp" alt="Pill" /><PillImage src="/pills/asadao-final.webp" alt="Pill" /><PillImage src="/pills/campus-on-chain.webp" alt="Pill" /></div></div></div></div><div className="creator-studio-copy"><h2>Creator<br />Studio</h2><p>Crea, diseña y organiza tus propias Pills. Trabaja con tu equipo, publícalas y entiende cómo crece cada colección.</p><a href="#access">Conoce Creator Studio <ArrowRight /></a></div></section>
+      <section className="creator-studio-showcase" id="studio"><div className="creator-studio-mock"><header><PillsLogo /><span>Creator Studio</span></header><div className="creator-studio-body"><aside><i /><i /><i /><i /></aside><div><span>Mis Pills</span><h3>Creator Studio</h3><div className="creator-studio-tools"><b><PencilRuler />Diseña</b><b><Grid3X3 />Organiza</b><b><BarChart3 />Mide</b></div><div className="creator-studio-pills"><i>+</i><PillImage src="/pills/aysen-futuro-final.webp" alt="Pill" /><PillImage src="/pills/asadao-final.webp" alt="Pill" /><PillImage src="/pills/campus-on-chain.webp" alt="Pill" /></div></div></div></div><div className="creator-studio-copy"><h2>Creator<br />Studio</h2><p>Crea, diseña y organiza tus propias Pills. Trabaja con tu equipo, publícalas y entiende cómo crece cada colección.</p><button type="button" onClick={openCreatorAccess}>Conoce Creator Studio <ArrowRight /></button></div></section>
 
-      <section className="creator-access" id="access"><div className="creator-access-intro"><h2>Convierte una experiencia en algo que se queda.</h2><p>Abre tu espacio de Creator Studio y crea tu primera Pill.</p><div className="creator-access-pills"><PillImage src="/pills/asadao-final.webp" alt="Pill" /><PillImage src="/pills/aysen-futuro-final.webp" alt="Pill" /></div></div>
+      <section className="creator-access"><div className="creator-access-intro"><h2>Convierte una experiencia en algo que se queda.</h2><p>Abre tu espacio de Creator Studio y crea tu primera Pill.</p><div className="creator-access-pills"><PillImage src="/pills/asadao-final.webp" alt="Pill" /><PillImage src="/pills/aysen-futuro-final.webp" alt="Pill" /></div></div>
+        <div className="creator-access-choice"><Sparkles /><h3>¿Qué quieres hacer?</h3><p>Usa la misma cuenta para crear Pills o administrar tu colección.</p><button className="creator-v2-button" type="button" onClick={openCreatorAccess}>Crear una Pill <ArrowRight /></button><a href={fansCollectionUrl}><FolderHeart />Ver mi colección</a></div>
+      </section>
+      <footer className="creator-v2-footer"><PillsLogo inverse /><nav><a href={fansExploreUrl}>Explorar</a><a href="#studio">Creator Studio</a><a href="#como-funciona">Cómo funciona</a></nav><a href={fansCollectionUrl}><FolderHeart />Ver mi colección</a></footer>
+
+      {accessOpen && <div className="creator-login-backdrop" onMouseDown={() => setAccessOpen(false)}>
+        <div className="creator-login-dialog" role="dialog" aria-modal="true" aria-labelledby="creator-login-title" onMouseDown={(event) => event.stopPropagation()}>
+          <button className="creator-login-close" type="button" aria-label="Cerrar acceso" onClick={() => setAccessOpen(false)}><X /></button>
           <article className="access-card creator-v2-access-card">
             {signedProfile ? <>
               <span className="access-icon"><Sparkles /></span><span className="eyebrow">TU CUENTA DE CREADOR</span>
-              <h2>Hola, @{signedProfile.username}.</h2>
+              <h2 id="creator-login-title">Hola, @{signedProfile.username}.</h2>
               <p>Tu sesión está activa. Continúa creando recuerdos para las experiencias que importan.</p>
               <a className="primary-button login-submit" href="/studio">Crear coleccionable <ArrowRight size={17} /></a>
               <a className="back-button" href="/studio">Ir al Creator Studio</a>
             </> : <><span className="access-icon"><Mail /></span><span className="eyebrow">ACCESO PARA CREADORES</span>
-            <h2>{step === "email" ? "Inicia sesión o crea tu cuenta." : "Revisa tu correo."}</h2>
+            <h2 id="creator-login-title">{step === "email" ? "Inicia sesión o crea tu cuenta." : "Revisa tu correo."}</h2>
             <p>{step === "email" ? "Entra con Google o recibe un código de acceso. No necesitas crear una contraseña." : <>Enviamos un código de acceso a <strong>{email}</strong>.</>}</p>
             {step === "email" ? <>
               <a className="google-button" href="/auth/google"><GoogleMark />Continuar con Google</a>
@@ -110,8 +143,8 @@ function LoginContent() {
             </>}
             <div className="security-note"><ShieldCheck /><span>Tu correo siempre es privado. Solo tu nombre de usuario será público.</span></div>
           </article>
-      </section>
-      <footer className="creator-v2-footer"><PillsLogo inverse /><nav><a href={fansExploreUrl}>Explorar</a><a href="#studio">Creator Studio</a><a href="#como-funciona">Cómo funciona</a></nav><a href={fansCollectionUrl}><FolderHeart />Ver mi colección</a></footer>
+        </div>
+      </div>}
     </main>
   );
 }
