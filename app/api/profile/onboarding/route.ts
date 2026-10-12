@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { ensurePrivyWallet } from "@/lib/privy/server";
 
 const usernamePattern = /^[a-z0-9._]{3,24}$/;
 
@@ -28,6 +29,11 @@ export async function POST(request: Request) {
 
     if (error?.code === "23505") return NextResponse.json({ error: "Ese nombre de usuario ya está ocupado." }, { status: 409 });
     if (error) return NextResponse.json({ error: "No pudimos guardar tu perfil." }, { status: 400 });
+    try {
+      await ensurePrivyWallet(authData.user);
+    } catch (walletError) {
+      console.error("Privy wallet provisioning failed after onboarding", walletError);
+    }
     return NextResponse.json({ saved: true, username });
   } catch {
     return NextResponse.json({ error: "No pudimos guardar tu perfil." }, { status: 503 });

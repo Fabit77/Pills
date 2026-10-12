@@ -10,6 +10,7 @@
     "backup:supabase": "node --env-file=.env.local scripts/backup-supabase.mjs"
   },
   "dependencies": {
+    "@privy-io/node": "^0.35.0",
     "@stellar/stellar-sdk": "^16.3.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.0",
@@ -21,7 +22,6 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "sharp": "0.35.5",
-    "smart-account-kit": "^0.8.0",
     "source-map-js": "1.2.2"
   },
   "devDependencies": {

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/site-url";
+import { ensurePrivyWallet } from "@/lib/privy/server";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -12,6 +13,11 @@ export async function GET(request: Request) {
     const supabase = await createClient();
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error && data.user) {
+      try {
+        await ensurePrivyWallet(data.user);
+      } catch (walletError) {
+        console.error("Privy wallet provisioning failed after OAuth login", walletError);
+      }
       const { data: publicProfile } = await supabase
         .from("public_usernames")
         .select("username")

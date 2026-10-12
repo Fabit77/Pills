@@ -18,28 +18,22 @@ La wallet pertenece al `auth.users.id` de Supabase, no al correo ni al proveedor
 
 ### Custodia recomendada
 
-Usar una **smart wallet Soroban controlada con passkey**. La clave privada de la passkey queda en el dispositivo o gestor de credenciales del usuario. En la primera versión, Pills guarda solamente la dirección `C...` del contrato-wallet; el SDK conserva la credencial en el almacenamiento seguro del navegador y verifica su control contra la cadena al reconectar.
+La versión de hackathon usa una **wallet Stellar integrada de Privy**. Al autenticarse con correo o Google, Pills crea o recupera un usuario Privy y una cuenta Stellar `G...` individual. Privy protege la clave con infraestructura TEE y key sharding; Pills guarda solamente los identificadores del proveedor y la dirección pública. No se guardan frases secretas, claves privadas ni códigos OTP en Supabase o Vercel.
 
 Pills patrocina las comisiones para que coleccionar una Pill no requiera XLM ni instalar una extensión.
 
-La wallet se prepara de forma diferida:
+La wallet se prepara automáticamente:
 
 1. La cuenta de Pills se crea normalmente con correo, magic link o Google.
-2. En la primera acción blockchain —primera colección, abrir “Mi wallet” o transferir— se solicita crear una passkey.
-3. Se despliega la smart wallet en testnet y se vincula al `user_id` interno.
-4. Las siguientes Pills llegan a la misma wallet aunque el usuario entre por otro proveedor vinculado.
+2. El backend busca o crea el usuario equivalente en Privy usando su correo verificado.
+3. Privy genera una wallet Stellar individual y Pills la vincula al `user_id` interno.
+4. Las Pills se mintean directamente en esa dirección, sin pedir una wallet externa, XLM ni biometría durante la colección.
 
-Este flujo evita desplegar wallets para cuentas abandonadas y mantiene la experiencia inicial sencilla. Se puede anticipar la creación al onboarding cuando el producto esté listo para explicarla bien.
+Si Privy está temporalmente indisponible, la colección queda reservada y el trabajo de mint se reintenta cuando la wallet esté activa.
 
 ### Recuperación
 
-Antes de mainnet se debe permitir registrar al menos dos credenciales:
-
-- passkey principal;
-- passkey de respaldo en otro dispositivo o gestor sincronizado;
-- recuperación asistida opcional con demora y notificaciones, sin convertir el correo por sí solo en autorización para transferir NFTs.
-
-El login de Pills recupera la cuenta de la aplicación. La passkey autoriza movimientos de la wallet. Son dos responsabilidades distintas.
+En Testnet, Privy vincula la wallet a un usuario verificado por correo. Antes de Mainnet se habilitarán MFA para transferencias y quema, una ruta visible de exportación de claves y alertas de seguridad. El login de Pills recupera la cuenta de la aplicación; las operaciones sensibles de la wallet deben exigir una nueva autenticación de Privy y nunca depender de una sesión antigua del navegador.
 
 ## Contrato NFT de Pills
 

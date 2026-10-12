@@ -8,7 +8,8 @@
 - Despliegue: `7fe13d5ae964d78137b17353f0eadee341fd22d7ed3bce4d8c8ab417b843f2cf`.
 - Las 10 Pills aprobadas existentes están registradas on-chain.
 - Los 19 claims existentes conservan número de edición y trabajo de mint idempotente.
-- Cada usuario activa una smart wallet con passkey. La clave privada permanece en el dispositivo o gestor de credenciales.
+- Cada usuario recibe automáticamente una wallet Stellar integrada de Privy al iniciar sesión. Pills solo almacena su dirección pública y los identificadores del proveedor.
+- Friendbot activa cada nueva dirección en Testnet para que sea visible en el explorador y pueda autorizar operaciones posteriores. Este paso se reemplaza por patrocinio de reservas antes de Mainnet.
 - La cuenta puede sincronizar hasta tres NFTs inmediatamente desde **Mi perfil**.
 - Un cron diario compatible con Vercel Hobby procesa hasta cinco trabajos como respaldo.
 
@@ -39,7 +40,7 @@ Nunca copiar `STELLAR_MINTER_SECRET`, `CRON_SECRET` ni credenciales de Supabase 
 
 1. Iniciar sesión con una cuenta que tenga una Pill coleccionada.
 2. Abrir Creator Studio → Mi perfil.
-3. Pulsar **Activar con passkey** y confirmar con biometría o PIN.
+3. Abrir **Mi perfil** y comprobar que aparece **Wallet integrada activa**, sin pasos adicionales para el usuario.
 4. Esperar la ejecución del worker o invocarlo manualmente con `POST /api/internal/stellar/process` y `Authorization: Bearer $CRON_SECRET`.
 5. Abrir el detalle de la Pill y comprobar su `mint_tx_hash` en Stellar Expert Testnet.
 6. Volver a entrar con otro método vinculado al mismo usuario. La dirección debe mantenerse porque la relación usa `auth.users.id`.

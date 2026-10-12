@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { ensurePrivyWallet } from "@/lib/privy/server";
 
 export async function POST(request: Request) {
   try {
@@ -16,6 +17,12 @@ export async function POST(request: Request) {
     });
     if (error || !data.user) {
       return NextResponse.json({ error: "El código no es válido o ya expiró." }, { status: 400 });
+    }
+
+    try {
+      await ensurePrivyWallet(data.user);
+    } catch (walletError) {
+      console.error("Privy wallet provisioning failed after email login", walletError);
     }
 
     const { data: publicProfile } = await supabase
