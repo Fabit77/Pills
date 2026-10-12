@@ -1,0 +1,4 @@
+.next
+backups
+contracts/**/target
+node_modules
