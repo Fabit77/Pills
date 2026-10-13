@@ -5,6 +5,7 @@ import { ArtworkError, optimizeArtwork } from "@/lib/artwork";
 import { decryptPrivateValue, encryptPrivateValue } from "@/lib/private-values";
 import { normalizeWebsiteUrl } from "@/lib/website";
 import { serviceClient } from "@/lib/admin-access";
+import { generatePublicSlug } from "@/lib/public-slug";
 
 const campaignColumns = "id,collection_id,name,description,event_type,venue,starts_at,ends_at,event_url,supply,status,artwork_url,qr_enabled,qr_token,secret_word_hash,public_slug,review_status,submitted_at,rejection_reason,claimed_count,first_claimed_at,is_paused,created_by,created_at";
 const MAX_ARTWORK_BYTES = 4 * 1024 * 1024;
@@ -69,13 +70,13 @@ export async function POST(request: Request) {
     const intent = form.get("intent") === "submit" ? "submit" : "draft";
     console.info("[collectibles:create] request received", { intent });
     const secretWord = String(form.get("secretWord") ?? "").trim();
-    const publicSlug = String(form.get("publicSlug") ?? "").trim().toLowerCase();
+    let publicSlug = String(form.get("publicSlug") ?? "").trim().toLowerCase();
     const rawEventUrl = String(form.get("eventUrl") ?? "").trim().slice(0, 500);
     const eventUrl = normalizeWebsiteUrl(rawEventUrl);
     if (!name || !description || !startsAtIso || !city || !(artwork instanceof File) || !artwork.size) return NextResponse.json({ error: "Completa los campos obligatorios." }, { status: 400 });
     if (/^\d{4}-\d{2}-\d{2}$/.test(clientLocalDate) && startsAt < clientLocalDate) return NextResponse.json({ error: "La fecha de inicio debe ser hoy o una fecha futura." }, { status: 400 });
     if (artwork.size > MAX_ARTWORK_BYTES) return NextResponse.json({ error: "La imagen o GIF debe pesar máximo 4 MB." }, { status: 413 });
-    if (!/^[a-z0-9]+-[a-z0-9]+-[a-z0-9]+$/.test(publicSlug)) return NextResponse.json({ error: "El enlace debe tener exactamente tres palabras separadas por guiones." }, { status: 400 });
+    if (publicSlug && !/^[a-z0-9]+-[a-z0-9]+-[a-z0-9]+$/.test(publicSlug)) return NextResponse.json({ error: "El enlace debe tener exactamente tres bloques separados por guiones." }, { status: 400 });
     if (rawEventUrl && !eventUrl) return NextResponse.json({ error: "Escribe un sitio web válido, por ejemplo asadao.io." }, { status: 400 });
     console.info("[collectibles:create] preparing artwork", { contentType: artwork.type, bytes: artwork.size });
     let optimizedArtwork: Awaited<ReturnType<typeof optimizeArtwork>>;
@@ -86,6 +87,15 @@ export async function POST(request: Request) {
     if (endsAtIso && new Date(endsAtIso) <= new Date(startsAtIso)) return NextResponse.json({ error: "La fecha y hora de término deben ser posteriores al inicio." }, { status: 400 });
 
     const admin = serviceClient();
+    if (!publicSlug) {
+      for (let attempt = 0; attempt < 12; attempt += 1) {
+        const candidate = generatePublicSlug();
+        const { data: available, error: availabilityError } = await supabase.rpc("is_campaign_slug_available", { candidate });
+        if (availabilityError) return NextResponse.json({ error: "No pudimos generar el enlace único." }, { status: 500 });
+        if (available) { publicSlug = candidate; break; }
+      }
+      if (!publicSlug) return NextResponse.json({ error: "No pudimos generar un enlace único. Intenta nuevamente." }, { status: 503 });
+    }
     const { data: memberships } = await admin.from("organization_members").select("organization_id").eq("user_id", user.id);
     const membershipIds = (memberships ?? []).map((item) => item.organization_id);
     const { data: personalOrganization } = membershipIds.length
