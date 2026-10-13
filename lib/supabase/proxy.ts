@@ -5,6 +5,9 @@ export async function updateSession(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY;
   const path = request.nextUrl.pathname;
+  // OAuth and email callbacks manage their own temporary cookies and session exchange.
+  // Running session refresh here can interfere with a new login when an older session exists.
+  if (path.startsWith("/auth/")) return NextResponse.next({ request });
   if (!url || !key) {
     if (path === "/" || path.startsWith("/studio")) {
       const target = request.nextUrl.clone();

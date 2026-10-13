@@ -8,6 +8,11 @@ export async function GET(request: Request) {
   const origin = getSiteUrl(request);
   const code = searchParams.get("code");
   const next = searchParams.get("next")?.startsWith("/") ? searchParams.get("next")! : "/studio";
+  const providerError = searchParams.get("error");
+
+  if (providerError) {
+    console.warn("Google OAuth provider returned an error", providerError);
+  }
 
   if (code) {
     const supabase = await createClient();
@@ -29,7 +34,11 @@ export async function GET(request: Request) {
       response.headers.set("Cache-Control", "no-store");
       return response;
     }
+    console.error("Google OAuth callback exchange failed", error?.message ?? "No user returned");
   }
 
-  return NextResponse.redirect(`${origin}/login?error=auth_callback`);
+  const response = NextResponse.redirect(`${origin}/login?error=auth_callback`);
+  response.cookies.delete("pills_auth_surface");
+  response.headers.set("Cache-Control", "no-store");
+  return response;
 }

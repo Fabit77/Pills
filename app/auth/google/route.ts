@@ -5,6 +5,12 @@ import { getSiteUrl } from "@/lib/site-url";
 export async function GET(request: Request) {
   try {
     const origin = getSiteUrl(request);
+    const requestUrl = new URL(request.url);
+    if (requestUrl.origin !== origin) {
+      const canonicalLogin = new URL("/auth/google", origin);
+      canonicalLogin.search = requestUrl.search;
+      return NextResponse.redirect(canonicalLogin);
+    }
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY;
     if (!supabaseUrl || !supabaseKey) throw new Error("Missing Supabase configuration");
@@ -37,7 +43,8 @@ export async function GET(request: Request) {
     });
     response.headers.set("Cache-Control", "no-store");
     return response;
-  } catch {
+  } catch (error) {
+    console.error("Google OAuth initialization failed", error instanceof Error ? error.message : "Unknown error");
     return NextResponse.redirect(new URL("/login?error=google_unavailable", request.url));
   }
 }

@@ -71,8 +71,13 @@ function LoginContent() {
     setAccessOpen(true);
   }
 
-  const visibleMessage = message || (step === "email" && searchParams.get("error") === "google_unavailable"
-    ? "El acceso con Google todavía no está habilitado. Puedes ingresar con tu correo."
+  const googleError = searchParams.get("error");
+  const visibleMessage = message || (step === "email"
+    ? googleError === "google_unavailable"
+      ? "No pudimos iniciar el acceso con Google. Intenta nuevamente o continúa con tu correo."
+      : googleError === "auth_callback"
+        ? "No pudimos completar el acceso con Google. Intenta nuevamente en esta misma ventana."
+        : ""
     : "");
 
   async function requestCode(event: FormEvent<HTMLFormElement>) {
