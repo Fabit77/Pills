@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, ArrowRight, BadgeCheck, Bell, Building2, CalendarDays, Check, ChevronDown, CircleHelp, Crown, FolderHeart, Gauge, ImagePlus, LayoutDashboard, LockKeyhole, MapPin, Menu, MoreHorizontal, PauseCircle, Play, Plus, Search, Settings, ShieldCheck, Sparkles, TicketCheck, Trash2, UserCog, UserPlus, Users, X, Zap } from "lucide-react";
+import { Activity, ArrowRight, BadgeCheck, Bell, Building2, CalendarDays, Check, ChevronDown, CircleHelp, Crown, FolderHeart, Gauge, ImagePlus, LayoutDashboard, LockKeyhole, Mail, MapPin, Menu, MoreHorizontal, PauseCircle, Play, Plus, Search, Send, Settings, ShieldCheck, Sparkles, TicketCheck, Trash2, UserCog, UserPlus, UserRound, Users, X, Zap } from "lucide-react";
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -22,7 +22,8 @@ type View = "overview" | "campaigns" | "collections" | "organizations" | "verifi
 type AdminRole = "super_admin" | "curator" | "admin" | null;
 type CreatorProfile = { username: string; firstName: string; lastName: string; bio: string; adminRole: AdminRole; canModerate: boolean; isSuperAdmin: boolean };
 type CampaignManager = { userId: string; username: string; role: "reader" };
-type Campaign = { id: string; collectionId?: string | null; name: string; description: string; eventType: string; venue: string; startsAt: string | null; endsAt: string | null; eventUrl: string; total: number; claimed: number; status: string; reviewStatus: string; submittedAt: string | null; isPaused: boolean; imageUrl: string; qrEnabled: boolean; qrToken: string | null; publicSlug: string; secretEnabled: boolean; secretWord: string; editable: boolean; rejectionReason: string; collaborators: CampaignManager[]; accessRole: "owner" | "reader"; canManage: boolean; createdAt: string };
+type Campaign = { id: string; collectionId?: string | null; name: string; description: string; eventType: string; venue: string; startsAt: string | null; endsAt: string | null; eventUrl: string; total: number; claimed: number; status: string; reviewStatus: string; submittedAt: string | null; isPaused: boolean; imageUrl: string; qrEnabled: boolean; qrToken: string | null; publicSlug: string; secretEnabled: boolean; secretWord: string; editable: boolean; rejectionReason: string; collaborators: CampaignManager[]; accessRole: "owner" | "reader"; canManage: boolean; createdAt: string; creatorId?: string; creatorUsername?: string; creatorDisplayName?: string; creatorAvatarUrl?: string };
+type CurationCreator = { id: string; username: string; displayName: string; bio: string; avatarUrl: string; accountStatus: string; accountCreatedAt: string; emailVerified: boolean; hasEmail: boolean; providers: string[]; createdCount: number; approvedCount: number; pendingCount: number; rejectedCount: number; collectedCount: number; receivedCollections: number; pausedCount: number };
 type PlatformEntity = { entity_type: "artist" | "organization"; entity_id: string; display_name: string; secondary_text: string };
 
 const baseNav: { id: View; label: string; icon: typeof Gauge }[] = [
@@ -156,9 +157,22 @@ function AdminOverview({ onNavigate }: { onNavigate: (view: View) => void }) {
 
 function Moderation({ onChanged, canDelete }: { onChanged: () => void; canDelete: boolean }) {
   const { items, message, loading, load } = useAdminCollectibles();
-  const [selected, setSelected] = useState<Campaign | null>(null); const [reason, setReason] = useState(""); const [actionMessage, setActionMessage] = useState("");
-  const [filter, setFilter] = useState<"pending" | "approved" | "rejected" | "all">("pending"); const [saving, setSaving] = useState(false);
-  async function finishAction() { setSelected(null); setReason(""); await load(); onChanged(); }
+  const [selected, setSelected] = useState<Campaign | null>(null);
+  const [reason, setReason] = useState("");
+  const [actionMessage, setActionMessage] = useState("");
+  const [filter, setFilter] = useState<"pending" | "approved" | "rejected" | "all">("pending");
+  const [saving, setSaving] = useState(false);
+  const [creator, setCreator] = useState<CurationCreator | null>(null);
+  const [creatorLoading, setCreatorLoading] = useState(false);
+  const [creatorError, setCreatorError] = useState("");
+  const [messageSubject, setMessageSubject] = useState("");
+  const [messageBody, setMessageBody] = useState("");
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const [messageResult, setMessageResult] = useState("");
+
+  async function finishAction() {
+    setSelected(null); setCreator(null); setReason(""); await load(); onChanged();
+  }
   async function review(decision: "approved" | "rejected") {
     if (!selected) return; setSaving(true); setActionMessage("");
     const response = await fetch(`/api/admin/collectibles/${selected.id}/review`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ decision, reason }) });
@@ -175,11 +189,64 @@ function Moderation({ onChanged, canDelete }: { onChanged: () => void; canDelete
     setSaving(true); setActionMessage(""); const response = await fetch(`/api/admin/collectibles/${selected.id}/actions`, { method: "DELETE" }); const result = await response.json();
     setSaving(false); if (!response.ok) { setActionMessage(result.error); return; } await finishAction();
   }
+  async function openCreator(campaign: Campaign) {
+    if (!campaign.creatorId) return;
+    setCreatorLoading(true); setCreatorError(""); setMessageResult(""); setMessageSubject(`Consulta sobre “${campaign.name}”`); setMessageBody("");
+    const response = await fetch(`/api/admin/creators/${campaign.creatorId}`, { cache: "no-store" });
+    const result = await response.json(); setCreatorLoading(false);
+    if (!response.ok) { setCreatorError(result.error || "No pudimos cargar el perfil."); return; }
+    setCreator(result.creator);
+  }
+  async function sendCreatorMessage(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!creator || !selected) return;
+    setSendingMessage(true); setMessageResult("");
+    const response = await fetch(`/api/admin/creators/${creator.id}/message`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ campaignId: selected.id, subject: messageSubject, message: messageBody }) });
+    const result = await response.json(); setSendingMessage(false);
+    if (!response.ok) { setMessageResult(result.error || "No pudimos enviar el mensaje."); return; }
+    setMessageBody(""); setMessageResult("Mensaje enviado al correo asociado a la cuenta.");
+  }
+
   const visible = filter === "all" ? items : items.filter((item) => item.reviewStatus === filter);
   const filters = [{ id: "pending" as const, label: "Pendientes" }, { id: "approved" as const, label: "Aprobados" }, { id: "rejected" as const, label: "Rechazados" }, { id: "all" as const, label: "Todos" }];
-  return <section><div className="page-intro"><div><span className="section-kicker"><span /> ADMINISTRACIÓN</span><h2>Curaduría de<br />Pills.</h2><p>Aprueba, pausa, rechaza o elimina Pills y controla su disponibilidad en la comunidad.</p></div></div><div className="moderation-summary"><article><strong>{items.filter((item) => item.reviewStatus === "pending").length}</strong><span>Pendientes</span></article><article><strong>{items.filter((item) => item.reviewStatus === "approved" && !item.isPaused).length}</strong><span>Activas</span></article><article><strong>{items.filter((item) => item.isPaused).length}</strong><span>Pausadas</span></article></div><div className="safety-rules"><ShieldCheck /><div><strong>Control rápido de seguridad</strong><p>Rechaza pornografía o sexualización de menores, violencia gráfica o celebratoria, odio o acoso, fraude o suplantación, actividades ilegales y uso de arte sin derechos.</p></div></div>{(message || actionMessage) && <p className="form-error">{message || actionMessage}</p>}<div className="admin-filter-row">{filters.map((item) => <button key={item.id} className={filter === item.id ? "active" : ""} onClick={() => setFilter(item.id)}>{item.label}<span>{item.id === "all" ? items.length : items.filter((campaign) => campaign.reviewStatus === item.id).length}</span></button>)}</div><div className="review-list">{visible.map((item) => <article key={item.id}><PillArtwork campaign={item} /><div><span>{item.venue}</span><h3>{item.name}</h3><p>{item.description}</p><small>Enviada {formatDate(item.createdAt)}</small></div><div className="review-row-action"><span className={`review-state ${item.isPaused ? "paused" : item.reviewStatus}`}>{item.isPaused ? "Pausada" : item.reviewStatus === "pending" ? "Pendiente" : item.reviewStatus === "approved" ? "Aprobada" : "Rechazada"}</span><button className={item.reviewStatus === "pending" ? "primary-button" : "secondary-button"} onClick={() => { setSelected(item); setReason(""); setActionMessage(""); }}>{item.reviewStatus === "pending" ? "Revisar" : "Gestionar"}</button></div></article>)}{!loading && !visible.length && <div className="empty-state"><BadgeCheck /><h3>No hay Pills aquí</h3><p>Esta categoría está vacía.</p></div>}</div>{selected && <div className="modal-backdrop review-backdrop"><div className="modal review-modal"><div className="modal-head"><div><span className="section-kicker"><span /> CURADURÍA</span><h2>{selected.name}</h2></div><button className="icon-button" onClick={() => setSelected(null)}><X /></button></div><div className="review-content"><div className="review-art"><PillArtwork campaign={selected} /></div><p>{selected.description}</p><ul><li><Check />El evento y el creador son identificables.</li><li><Check />El arte no infringe derechos evidentes.</li><li><Check />No contiene pornografía, odio ni violencia gráfica.</li><li><Check />No promueve fraude, engaño o actividades ilegales.</li></ul>{selected.reviewStatus !== "rejected" && <label><span>Motivo del rechazo</span><textarea value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Explica por qué se rechaza esta Pill" /></label>}{selected.reviewStatus === "rejected" && <div className="review-history rejected"><strong>Pill rechazada</strong><p>{selected.rejectionReason || "Sin motivo registrado."}</p></div>}<div className="curation-actions">{selected.reviewStatus === "pending" && <button className="primary-button" disabled={saving} onClick={() => void review("approved")}><BadgeCheck size={16} />Aprobar</button>}{selected.reviewStatus !== "rejected" && <button className="secondary-button danger-button" disabled={saving || !reason.trim()} onClick={() => void review("rejected")}><X size={16} />Rechazar</button>}{selected.reviewStatus === "approved" && <button className="secondary-button pause-button" disabled={saving} onClick={() => void setPaused(selected.isPaused ? "resume" : "pause")}>{selected.isPaused ? <><Play size={16} />Reactivar</> : <><PauseCircle size={16} />Pausar</>}</button>}{canDelete && <button className="secondary-button delete-button" disabled={saving} onClick={() => void deletePill()}><Trash2 size={16} />Eliminar</button>}</div>{saving && <p className="saving-note">Guardando acción…</p>}</div></div></div>}</section>;
-}
+  const creatorLabel = (campaign: Campaign) => campaign.creatorUsername ? `@${campaign.creatorUsername}` : campaign.creatorDisplayName || "Creador sin @usuario";
 
+  return <section>
+    <div className="page-intro"><div><span className="section-kicker"><span /> ADMINISTRACIÓN</span><h2>Curaduría de<br />Pills.</h2><p>Aprueba, pausa, rechaza o elimina Pills y controla su disponibilidad en la comunidad.</p></div></div>
+    <div className="moderation-summary"><article><strong>{items.filter((item) => item.reviewStatus === "pending").length}</strong><span>Pendientes</span></article><article><strong>{items.filter((item) => item.reviewStatus === "approved" && !item.isPaused).length}</strong><span>Activas</span></article><article><strong>{items.filter((item) => item.isPaused).length}</strong><span>Pausadas</span></article></div>
+    <div className="safety-rules"><ShieldCheck /><div><strong>Control rápido de seguridad</strong><p>Rechaza pornografía o sexualización de menores, violencia gráfica o celebratoria, odio o acoso, fraude o suplantación, actividades ilegales y uso de arte sin derechos.</p></div></div>
+    {(message || actionMessage) && <p className="form-error">{message || actionMessage}</p>}
+    <div className="admin-filter-row">{filters.map((item) => <button key={item.id} className={filter === item.id ? "active" : ""} onClick={() => setFilter(item.id)}>{item.label}<span>{item.id === "all" ? items.length : items.filter((campaign) => campaign.reviewStatus === item.id).length}</span></button>)}</div>
+    <div className="review-list">{visible.map((item) => <article key={item.id}>
+      <PillArtwork campaign={item} />
+      <div><span>{item.venue}</span><h3>{item.name}</h3><p>{item.description}</p><button className="review-creator-link" type="button" onClick={() => { setSelected(item); void openCreator(item); }}><UserRound />{creatorLabel(item)}</button><small>Enviada {formatDate(item.createdAt)}</small></div>
+      <div className="review-row-action"><span className={`review-state ${item.isPaused ? "paused" : item.reviewStatus}`}>{item.isPaused ? "Pausada" : item.reviewStatus === "pending" ? "Pendiente" : item.reviewStatus === "approved" ? "Aprobada" : "Rechazada"}</span><button className={item.reviewStatus === "pending" ? "primary-button" : "secondary-button"} onClick={() => { setSelected(item); setCreator(null); setReason(""); setActionMessage(""); }}>{item.reviewStatus === "pending" ? "Revisar" : "Gestionar"}</button></div>
+    </article>)}{!loading && !visible.length && <div className="empty-state"><BadgeCheck /><h3>No hay Pills aquí</h3><p>Esta categoría está vacía.</p></div>}</div>
+
+    {selected && <div className="modal-backdrop review-backdrop"><div className="modal review-modal"><div className="modal-head"><div><span className="section-kicker"><span /> CURADURÍA</span><h2>{selected.name}</h2></div><button className="icon-button" onClick={() => { setSelected(null); setCreator(null); }}><X /></button></div><div className="review-content"><div className="review-art"><PillArtwork campaign={selected} /></div>
+      <button className="curation-creator-card" type="button" onClick={() => void openCreator(selected)}>
+        {selected.creatorAvatarUrl ? <Image src={selected.creatorAvatarUrl} alt="" width={48} height={48} unoptimized /> : <span>{(selected.creatorUsername || selected.creatorDisplayName || "P").slice(0, 2).toUpperCase()}</span>}
+        <div><small>Creada por</small><strong>{creatorLabel(selected)}</strong>{selected.creatorDisplayName && <em>{selected.creatorDisplayName}</em>}</div><ArrowRight />
+      </button>
+      <p>{selected.description}</p><ul><li><Check />El evento y el creador son identificables.</li><li><Check />El arte no infringe derechos evidentes.</li><li><Check />No contiene pornografía, odio ni violencia gráfica.</li><li><Check />No promueve fraude, engaño o actividades ilegales.</li></ul>
+      {selected.reviewStatus !== "rejected" && <label><span>Motivo del rechazo</span><textarea value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Explica por qué se rechaza esta Pill" /></label>}{selected.reviewStatus === "rejected" && <div className="review-history rejected"><strong>Pill rechazada</strong><p>{selected.rejectionReason || "Sin motivo registrado."}</p></div>}
+      <div className="curation-actions">{selected.reviewStatus === "pending" && <button className="primary-button" disabled={saving} onClick={() => void review("approved")}><BadgeCheck size={16} />Aprobar</button>}{selected.reviewStatus !== "rejected" && <button className="secondary-button danger-button" disabled={saving || !reason.trim()} onClick={() => void review("rejected")}><X size={16} />Rechazar</button>}{selected.reviewStatus === "approved" && <button className="secondary-button pause-button" disabled={saving} onClick={() => void setPaused(selected.isPaused ? "resume" : "pause")}>{selected.isPaused ? <><Play size={16} />Reactivar</> : <><PauseCircle size={16} />Pausar</>}</button>}{canDelete && <button className="secondary-button delete-button" disabled={saving} onClick={() => void deletePill()}><Trash2 size={16} />Eliminar</button>}</div>{saving && <p className="saving-note">Guardando acción…</p>}
+    </div></div></div>}
+
+    {(creatorLoading || creator || creatorError) && selected && <div className="modal-backdrop creator-review-backdrop"><div className="modal creator-review-modal">
+      <div className="modal-head"><div><span className="section-kicker"><span /> PERFIL PARA CURADURÍA</span><h2>{creator ? (creator.username ? `@${creator.username}` : creator.displayName) : "Cargando perfil…"}</h2></div><button className="icon-button" onClick={() => { setCreator(null); setCreatorError(""); setCreatorLoading(false); }}><X /></button></div>
+      {creatorLoading && <div className="creator-review-loading">Cargando antecedentes del creador…</div>}
+      {creatorError && <p className="form-error creator-review-error">{creatorError}</p>}
+      {creator && <div className="creator-review-scroll">
+        <div className="creator-review-header">{creator.avatarUrl ? <Image src={creator.avatarUrl} alt="" width={74} height={74} unoptimized /> : <span>{(creator.username || creator.displayName).slice(0, 2).toUpperCase()}</span>}<div><h3>{creator.displayName}</h3><strong>{creator.username ? `@${creator.username}` : "Sin @usuario"}</strong><small className={`creator-account-state ${creator.accountStatus}`}>{creator.accountStatus === "active" ? "Cuenta activa" : creator.accountStatus === "paused" ? "Cuenta pausada" : "Cuenta bloqueada"}</small></div></div>
+        {creator.bio && <p className="creator-review-bio">{creator.bio}</p>}
+        <div className="creator-review-stats"><article><Sparkles /><span><strong>{creator.createdCount}</strong><small>Pills creadas</small></span></article><article><BadgeCheck /><span><strong>{creator.approvedCount}</strong><small>Aprobadas</small></span></article><article><Users /><span><strong>{creator.collectedCount}</strong><small>Coleccionadas</small></span></article><article><Activity /><span><strong>{creator.receivedCollections}</strong><small>Colecciones recibidas</small></span></article></div>
+        <dl className="creator-review-facts"><div><dt>Cuenta creada</dt><dd>{formatDate(creator.accountCreatedAt)}</dd></div><div><dt>En revisión</dt><dd>{creator.pendingCount}</dd></div><div><dt>Rechazadas</dt><dd>{creator.rejectedCount}</dd></div><div><dt>Correo verificado</dt><dd>{creator.emailVerified ? "Sí" : "No"}</dd></div><div><dt>Métodos de acceso</dt><dd>{creator.providers.join(", ") || "Correo"}</dd></div><div><dt>Correo disponible</dt><dd>{creator.hasEmail ? "Sí, oculto por privacidad" : "No"}</dd></div></dl>
+        <form className="curation-message-form" onSubmit={(event) => void sendCreatorMessage(event)}><div><Mail /><span><strong>Consultar al creador</strong><small>El mensaje llegará al correo asociado y quedará registrado.</small></span></div><label><span>Asunto</span><input required minLength={3} maxLength={140} value={messageSubject} onChange={(event) => setMessageSubject(event.target.value)} /></label><label><span>Mensaje</span><textarea required minLength={10} maxLength={3000} value={messageBody} onChange={(event) => setMessageBody(event.target.value)} placeholder="Explica qué antecedente necesitas confirmar antes de tomar una decisión." /></label>{messageResult && <p className={messageResult.startsWith("Mensaje enviado") ? "curation-message-success" : "form-error"}>{messageResult}</p>}<button className="primary-button" disabled={sendingMessage || !creator.hasEmail}><Send />{sendingMessage ? "Enviando…" : "Enviar consulta"}</button></form>
+      </div>}
+    </div></div>}
+  </section>;
+}
 function Verification() { return <section><div className="page-intro"><div><span className="section-kicker"><span /> CONFIANZA</span><h2>Tu identidad,<br />reconocida.</h2><p>Podrás solicitar verificación como creador, marca, artista o equipo.</p></div></div><div className="verification-grid"><article className="panel verify-card"><div className="verify-hero"><span className="avatar avatar-orange">P</span></div><span className="status"><i />Sin verificar</span><h3>Cuenta personal</h3><p>La verificación pública será parte de una siguiente etapa.</p></article><article className="panel verify-info"><span className="eyebrow">CURADURÍA PILLS</span><h3>Cada publicación pasa por revisión</h3><div><span><BadgeCheck /></span><p><strong>Experiencia oficial</strong>Identifica coleccionables aprobados y habilita su distribución.</p></div><div><span><TicketCheck /></span><p><strong>Comunidad protegida</strong>Aplicamos reglas sobre seguridad, derechos y contenido.</p></div></article></div></section>; }
 function Profile({ profile, onSaved }: { profile: CreatorProfile; onSaved: (profile: CreatorProfile) => void }) {
   const [form, setForm] = useState(profile); const [saving, setSaving] = useState(false); const [message, setMessage] = useState("");

@@ -57,5 +57,9 @@ export function campaignJson(row: Record<string, unknown>, collaborators: Campai
     secretWord,
     submittedAt,
     createdAt: row.created_at,
+    creatorId: row.creator_id ?? "",
+    creatorUsername: row.creator_username ?? "",
+    creatorDisplayName: row.creator_display_name ?? "",
+    creatorAvatarUrl: row.creator_avatar_url ?? "",
   };
 }
