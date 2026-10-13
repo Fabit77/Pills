@@ -38,6 +38,7 @@ const adminNav: { id: View; label: string; icon: typeof Gauge }[] = [
 ];
 const formatNumber = (value: number) => new Intl.NumberFormat("es-CL").format(value);
 const formatDate = (value: string | null) => value ? new Date(value).toLocaleDateString("es-CL", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase() : "SIN FECHA";
+const formatDateTime = (value: string | null) => value ? new Date(value).toLocaleString("es-CL", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "Sin definir";
 const statusClass = (value: string) => value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s/g, "-");
 const MAX_ARTWORK_BYTES = 4 * 1024 * 1024;
 const fansBaseUrl = process.env.NEXT_PUBLIC_PILLSFANS_URL || "https://fans.pills.social";
@@ -208,7 +209,17 @@ function Moderation({ onChanged, canDelete }: { onChanged: () => void; canDelete
           {selected.creatorAvatarUrl ? <Image src={selected.creatorAvatarUrl} alt="" width={48} height={48} unoptimized /> : <span>{(selected.creatorUsername || selected.creatorDisplayName || "P").slice(0, 2).toUpperCase()}</span>}
           <div><small>Creada por</small><strong>{creatorLabel(selected)}</strong>{selected.creatorDisplayName && <em>{selected.creatorDisplayName}</em>}</div><ExternalLink />
         </a>}
-        <p>{selected.description}</p>
+        <p className="review-description">{selected.description}</p>
+        <dl className="review-pill-details">
+          <div className="review-detail-wide"><dt>Enlace público para revisar</dt><dd>{selected.publicSlug ? <a href={`${fansBaseUrl}/collect/${selected.publicSlug}`} target="_blank" rel="noopener noreferrer">{fansBaseUrl.replace(/^https?:\/\//, "")}/collect/<strong>{selected.publicSlug}</strong><ExternalLink /></a> : "Aún no generado"}</dd></div>
+          <div><dt>Ubicación</dt><dd>{selected.venue || "Sin definir"}</dd></div>
+          <div><dt>Cantidad disponible</dt><dd>{formatNumber(selected.total)} Pills</dd></div>
+          <div><dt>Inicio</dt><dd>{formatDateTime(selected.startsAt)}</dd></div>
+          <div><dt>Término</dt><dd>{selected.endsAt ? formatDateTime(selected.endsAt) : "Sin fecha de término"}</dd></div>
+          <div><dt>Métodos de colección</dt><dd>{[selected.qrEnabled ? "Código QR" : "", selected.secretEnabled ? "Palabra secreta" : ""].filter(Boolean).join(" + ") || "Sin método definido"}</dd></div>
+          <div><dt>Estado y uso</dt><dd>{selected.status} · {formatNumber(selected.claimed)} de {formatNumber(selected.total)} coleccionadas</dd></div>
+          {selected.eventUrl && <div className="review-detail-wide"><dt>Sitio web asociado</dt><dd><a href={selected.eventUrl} target="_blank" rel="noopener noreferrer">{selected.eventUrl}<ExternalLink /></a></dd></div>}
+        </dl>
       </div>
       <div className="review-decision-column"><ul><li><Check />El evento y el creador son identificables.</li><li><Check />El arte no infringe derechos evidentes.</li><li><Check />No contiene pornografía, odio ni violencia gráfica.</li><li><Check />No promueve fraude, engaño o actividades ilegales.</li></ul>
         {selected.reviewStatus !== "rejected" && <label><span>Motivo del rechazo</span><textarea value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Explica por qué se rechaza esta Pill" /></label>}{selected.reviewStatus === "rejected" && <div className="review-history rejected"><strong>Pill rechazada</strong><p>{selected.rejectionReason || "Sin motivo registrado."}</p></div>}

@@ -438,7 +438,17 @@ html,body{background:var(--pills-white);color:var(--pills-black)}
 .review-summary-column{display:flex;flex-direction:column}
 .review-decision-column{display:flex;flex-direction:column}
 .review-art{width:156px;height:156px;margin:0 auto 18px}
-.review-summary-column>p{font-size:11px;color:#66635d;line-height:1.55}
+.review-description{font-size:11px;color:#66635d;line-height:1.55;padding:0 2px}
+.review-pill-details{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:13px;overflow:hidden;margin:16px 0 0;background:#fff}
+.review-pill-details>div{min-width:0;padding:11px 12px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:4px}
+.review-pill-details>div:nth-child(even):not(.review-detail-wide){border-right:1px solid var(--line)}
+.review-pill-details>div:last-child{border-bottom:0}.review-pill-details:not(:has(>.review-detail-wide:last-child))>div:nth-last-child(2){border-bottom:0}
+.review-pill-details>.review-detail-wide{grid-column:1/-1;border-right:0}
+.review-pill-details dt{font-size:7px;color:#8b867e;text-transform:uppercase;letter-spacing:.08em;font-weight:750}
+.review-pill-details dd{margin:0;font-size:9px;line-height:1.4;font-weight:650;color:#37342f;overflow-wrap:anywhere}
+.review-pill-details a{color:#5f43d6;text-decoration:none;display:inline-flex;align-items:center;gap:4px;max-width:100%;overflow-wrap:anywhere;word-break:break-word}
+.review-pill-details a:hover{text-decoration:underline}.review-pill-details a svg{width:11px;height:11px;flex:0 0 auto}
+.review-pill-details a strong{font-weight:850;color:#342079}
 .review-decision-column>ul{list-style:none;padding:15px;margin:0 0 18px;background:#f1eee7;border-radius:11px}
 .review-decision-column>ul li{font-size:10px;display:flex;align-items:center;gap:8px;margin:8px 0}
 .review-decision-column>ul li svg{width:15px;color:var(--green)}
@@ -469,6 +479,7 @@ html,body{background:var(--pills-white);color:var(--pills-black)}
   .review-modal>.modal-head h2{font-size:27px}
   .review-content{display:grid;grid-template-columns:1fr;gap:20px;padding:20px 20px calc(24px + env(safe-area-inset-bottom));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
   .review-art{width:140px;height:140px}
+  .review-pill-details{grid-template-columns:1fr}.review-pill-details>div,.review-pill-details>div:nth-child(even):not(.review-detail-wide),.review-pill-details:not(:has(>.review-detail-wide:last-child))>div:nth-last-child(2){border-right:0;border-bottom:1px solid var(--line)}.review-pill-details>div:last-child{border-bottom:0}
   .review-decision-column .curation-actions{position:sticky;bottom:calc(-24px - env(safe-area-inset-bottom));margin-left:-20px;margin-right:-20px;padding:14px 20px calc(14px + env(safe-area-inset-bottom));background:#fbfaf6;box-shadow:0 -8px 22px rgba(35,31,26,.07)}
   .curator-profile-page{padding:14px 12px 30px}
   .curator-profile-nav{margin-bottom:12px}.curator-profile-nav .pills-logo{width:165px}.curator-profile-nav .secondary-button{width:40px;padding:0;font-size:0}.curator-profile-nav .secondary-button svg{width:17px}
