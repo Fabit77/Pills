@@ -494,3 +494,12 @@ html,body{background:var(--pills-white);color:var(--pills-black)}
   .review-modal>.modal-head{padding-top:16px;padding-bottom:14px}.review-modal>.modal-head h2{font-size:27px}
   .review-content{padding-top:18px;padding-bottom:20px}.review-art{width:125px;height:125px;margin-bottom:12px}.curation-creator-card{margin-bottom:12px}.review-decision-column>ul{padding:10px 14px;margin-bottom:12px}.review-decision-column>ul li{margin:6px 0}.review-decision-column textarea{min-height:88px}.curation-actions{margin-top:12px;padding-top:12px}
 }
+
+/* Keep status and collection totals in separate columns */
+.campaign-row{grid-template-columns:46px minmax(140px,1.4fr) minmax(155px,175px) 120px minmax(80px,.8fr) 38px;column-gap:18px}
+.campaign-row .table-stat{min-width:0}
+.campaign-row .table-stat .status{max-width:100%;white-space:nowrap}
+@media(max-width:1100px){
+  .campaign-table{min-width:700px}
+  .campaign-row{grid-template-columns:46px minmax(150px,1fr) 155px 110px 38px;column-gap:18px}
+}
