@@ -428,3 +428,58 @@ html,body{background:var(--pills-white);color:var(--pills-black)}
 /* Curator creator profile and private contact flow */
 .review-creator-link{border:0;background:transparent;color:#6848ec!important;padding:0;margin:7px 0 0;display:flex;align-items:center;gap:5px;font-size:9px!important;font-weight:750;cursor:pointer;text-transform:none!important;letter-spacing:0!important}.review-creator-link svg{width:13px;height:13px}.curation-creator-card{width:100%;border:1px solid #e4dfd6;background:#f7f4ee;border-radius:13px;padding:12px;margin:0 0 18px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:11px;text-align:left;color:var(--ink);cursor:pointer}.curation-creator-card:hover{border-color:#8d75ef;background:#f5f1ff}.curation-creator-card>img,.curation-creator-card>span{width:48px;height:48px;border-radius:50%;object-fit:cover;background:linear-gradient(135deg,#6848ec,#ff725e);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:800}.curation-creator-card>div{display:flex;flex-direction:column;min-width:0}.curation-creator-card small{font-size:8px;color:#8a857d}.curation-creator-card strong{font:750 13px "Manrope";margin:2px 0}.curation-creator-card em{font-size:9px;color:#77726a;font-style:normal}.curation-creator-card>svg{width:16px;color:#817a8d}.creator-review-backdrop{z-index:80;background:rgba(15,14,18,.68)}.creator-review-modal{width:min(760px,100%);max-height:min(900px,94dvh);display:flex;flex-direction:column;overflow:hidden}.creator-review-scroll{padding:24px 30px 30px;overflow:auto;display:grid;gap:18px}.creator-review-loading,.creator-review-error{padding:35px 30px}.creator-review-header{display:flex;align-items:center;gap:15px}.creator-review-header>img,.creator-review-header>span{width:74px;height:74px;border-radius:50%;object-fit:cover;background:linear-gradient(135deg,#6848ec,#ff725e);color:white;display:grid;place-items:center;font:800 17px "Manrope"}.creator-review-header>div{display:flex;flex-direction:column;align-items:flex-start}.creator-review-header h3{font:750 22px "Manrope"}.creator-review-header strong{font-size:11px;color:#6848ec;margin-top:2px}.creator-account-state{font-size:8px!important;padding:5px 8px;border-radius:999px;margin-top:7px;background:#dff2eb;color:#167360}.creator-account-state.paused{background:#fff0c7;color:#85630d}.creator-account-state.blocked{background:#ffe4df;color:#a33b26}.creator-review-bio{font-size:11px;line-height:1.6;color:#69645d;background:#f4f1eb;border-radius:11px;padding:13px}.creator-review-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.creator-review-stats article{border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;align-items:center;gap:9px}.creator-review-stats svg{width:18px;color:#6848ec}.creator-review-stats span{display:flex;flex-direction:column}.creator-review-stats strong{font:750 20px "Manrope"}.creator-review-stats small{font-size:7px;color:#817c75}.creator-review-facts{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:12px;overflow:hidden}.creator-review-facts>div{padding:11px 13px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px}.creator-review-facts>div:nth-child(odd){border-right:1px solid var(--line)}.creator-review-facts>div:nth-last-child(-n+2){border-bottom:0}.creator-review-facts dt{font-size:8px;color:#858078}.creator-review-facts dd{font-size:8px;font-weight:700;text-align:right}.curation-message-form{border-top:1px solid var(--line);padding-top:18px;display:grid;gap:11px}.curation-message-form>div{display:flex;align-items:center;gap:10px}.curation-message-form>div>svg{width:22px;color:#6848ec}.curation-message-form>div>span{display:flex;flex-direction:column}.curation-message-form>div strong{font:750 15px "Manrope"}.curation-message-form>div small{font-size:8px;color:#858078;margin-top:2px}.curation-message-form label{display:grid;gap:6px}.curation-message-form label>span{font-size:9px;font-weight:700}.curation-message-form input,.curation-message-form textarea{width:100%;border:1px solid #dedbd4;border-radius:9px;padding:11px;font:11px/1.5 inherit;outline:0}.curation-message-form textarea{min-height:105px;resize:vertical}.curation-message-form input:focus,.curation-message-form textarea:focus{border-color:#8067e8;box-shadow:0 0 0 3px #eee9ff}.curation-message-form .primary-button{justify-self:start}.curation-message-form .primary-button svg{width:14px}.curation-message-success{font-size:9px;color:#167360;background:#dff2eb;padding:9px;border-radius:8px}
 @media(max-width:760px){.creator-review-backdrop{padding:0;align-items:stretch}.creator-review-modal{width:100%;height:100dvh;max-height:100dvh;border-radius:0}.creator-review-scroll{padding:20px 17px calc(25px + env(safe-area-inset-bottom))}.creator-review-stats{grid-template-columns:1fr 1fr}.creator-review-facts{grid-template-columns:1fr}.creator-review-facts>div,.creator-review-facts>div:nth-child(odd){border-right:0;border-bottom:1px solid var(--line)}.creator-review-facts>div:last-child{border-bottom:0}.curation-message-form .primary-button{width:100%;justify-content:center}}
+
+/* Wider curation workspace and standalone creator review */
+.review-modal{width:min(980px,calc(100vw - 40px));max-height:calc(100dvh - 40px);overflow:hidden;display:flex;flex-direction:column}
+.review-modal>.modal-head{flex:0 0 auto;padding:22px 28px 18px;border-bottom:1px solid var(--line)}
+.review-modal>.modal-head h2{font-size:30px;overflow-wrap:anywhere}
+.review-content{flex:1 1 auto;min-height:0;overflow:auto;border-top:0;padding:24px 28px 28px;display:grid;grid-template-columns:minmax(270px,.82fr) minmax(390px,1.18fr);gap:28px}
+.review-summary-column,.review-decision-column{min-width:0}
+.review-summary-column{display:flex;flex-direction:column}
+.review-decision-column{display:flex;flex-direction:column}
+.review-art{width:156px;height:156px;margin:0 auto 18px}
+.review-summary-column>p{font-size:11px;color:#66635d;line-height:1.55}
+.review-decision-column>ul{list-style:none;padding:15px;margin:0 0 18px;background:#f1eee7;border-radius:11px}
+.review-decision-column>ul li{font-size:10px;display:flex;align-items:center;gap:8px;margin:8px 0}
+.review-decision-column>ul li svg{width:15px;color:var(--green)}
+.review-decision-column>label{display:flex;flex-direction:column;gap:7px}
+.review-decision-column>label span{font-size:10px;font-weight:700}
+.review-decision-column textarea{width:100%;min-height:118px;border:1px solid #dedbd4;border-radius:9px;padding:12px;resize:vertical;outline:0;font:12px/1.5 inherit}
+.review-decision-column textarea:focus{border-color:var(--orange);box-shadow:0 0 0 3px #ffe2d6}
+.review-creator-link{text-decoration:none;width:max-content}.review-creator-link svg:last-child{width:11px;height:11px;margin-left:1px}
+.curation-creator-card{text-decoration:none}.curation-creator-card>svg{width:16px}
+
+.curator-profile-page{min-height:100dvh;background:linear-gradient(145deg,#f6f3ed 0%,#fbfaf7 55%,#f0edff 100%);padding:24px clamp(18px,4vw,54px) 54px}
+.curator-profile-nav{max-width:1180px;margin:0 auto 22px;display:flex;align-items:center;justify-content:space-between;gap:18px}
+.curator-profile-nav>a{text-decoration:none;color:inherit}.curator-profile-nav .pills-logo{width:230px}.curator-profile-nav .secondary-button svg{width:15px}
+.curator-profile-card{max-width:1180px;margin:0 auto;background:#fbfaf7;border:1px solid var(--line);border-radius:24px;box-shadow:0 28px 75px rgba(35,29,24,.12);overflow:hidden}
+.curator-profile-title{padding:28px 34px 24px;border-bottom:1px solid var(--line)}
+.curator-profile-title h1{font:750 clamp(30px,4vw,48px)/1 "Manrope";letter-spacing:-2px}
+.curator-profile-title>p{font-size:11px;color:#77726a;margin-top:10px}.curator-profile-title>p strong{color:var(--ink)}
+.curator-profile-grid{padding:28px 34px 34px;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(320px,.8fr);gap:34px;align-items:start}
+.curator-profile-details{display:grid;gap:18px;min-width:0}
+.curator-profile-message{border:1px solid var(--line);border-top:1px solid var(--line);border-radius:16px;background:white;padding:20px;position:sticky;top:24px}
+.curator-profile-message textarea{min-height:150px}
+.curator-profile-error{padding:40px 34px;display:flex;flex-direction:column;align-items:flex-start;gap:16px}.curator-profile-error p{color:#a33b26;font-size:12px}
+
+@media(max-width:760px){
+  .review-backdrop{padding:0;align-items:stretch;overflow:hidden}
+  .review-modal{width:100%;height:100dvh;max-height:100dvh;border-radius:0}
+  .review-modal>.modal-head{padding:18px 20px 15px}
+  .review-modal>.modal-head h2{font-size:27px}
+  .review-content{display:grid;grid-template-columns:1fr;gap:20px;padding:20px 20px calc(24px + env(safe-area-inset-bottom));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  .review-art{width:140px;height:140px}
+  .review-decision-column .curation-actions{position:sticky;bottom:calc(-24px - env(safe-area-inset-bottom));margin-left:-20px;margin-right:-20px;padding:14px 20px calc(14px + env(safe-area-inset-bottom));background:#fbfaf6;box-shadow:0 -8px 22px rgba(35,31,26,.07)}
+  .curator-profile-page{padding:14px 12px 30px}
+  .curator-profile-nav{margin-bottom:12px}.curator-profile-nav .pills-logo{width:165px}.curator-profile-nav .secondary-button{width:40px;padding:0;font-size:0}.curator-profile-nav .secondary-button svg{width:17px}
+  .curator-profile-card{border-radius:17px}
+  .curator-profile-title{padding:22px 20px 19px}.curator-profile-title h1{font-size:31px;letter-spacing:-1.4px}
+  .curator-profile-grid{grid-template-columns:1fr;padding:22px 18px 24px;gap:24px}
+  .creator-review-stats{grid-template-columns:1fr 1fr}
+  .creator-review-facts{grid-template-columns:1fr}.creator-review-facts>div,.creator-review-facts>div:nth-child(odd){border-right:0;border-bottom:1px solid var(--line)}.creator-review-facts>div:last-child{border-bottom:0}
+  .curator-profile-message{position:static}.curator-profile-message .primary-button{width:100%;justify-content:center}
+}
+@media(min-width:761px) and (max-height:760px){
+  .review-modal>.modal-head{padding-top:16px;padding-bottom:14px}.review-modal>.modal-head h2{font-size:27px}
+  .review-content{padding-top:18px;padding-bottom:20px}.review-art{width:125px;height:125px;margin-bottom:12px}.curation-creator-card{margin-bottom:12px}.review-decision-column>ul{padding:10px 14px;margin-bottom:12px}.review-decision-column>ul li{margin:6px 0}.review-decision-column textarea{min-height:88px}.curation-actions{margin-top:12px;padding-top:12px}
+}
