@@ -64,6 +64,7 @@ El contrato no guardará correos, nombres, imágenes ni datos personales.
 
 ### Identificadores
 
+- `drop_id`: número corto, secuencial e inmutable que identifica la Pill original en el producto. Agrupa todas sus ediciones y apunta a la transacción `register_campaign`; no es un NFT adicional.
 - `token_id`: entero derivado de una secuencia propia en base de datos, no del correo ni del UUID expuesto directamente.
 - `campaign_ref`: hash del UUID de la campaña.
 - `content_hash`: SHA-256 del archivo exacto entregado al aprobar la Pill.
@@ -92,6 +93,8 @@ El hash on-chain permite demostrar cuál fue el archivo original aunque posterio
 2. Al aprobarse, se congela una versión del arte y se calcula `content_hash`.
 3. Un worker ejecuta `register_campaign` y guarda su transacción y ledger. Desde ese momento la Pill ya tiene un registro verificable en Stellar aunque nadie la haya coleccionado.
 4. Aún no se acuñan todos los NFTs: se acuña cada edición cuando una persona la colecciona. Esto evita pagar y almacenar unidades que nunca se reclamarán.
+
+El Explorador de Pills muestra el `drop_id` y enlaza esa transacción de registro. La colección privada muestra además el `token_id` de la edición concreta que pertenece al usuario.
 
 ### Coleccionar
 

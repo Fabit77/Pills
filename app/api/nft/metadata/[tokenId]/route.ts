@@ -30,7 +30,7 @@ export async function GET(
   const { data: campaign } = await service
     .from("campaigns")
     .select(
-      "id,name,description,artwork_url,artwork_removed_at,venue,starts_at,supply,created_by,content_hash",
+      "id,drop_id,name,description,artwork_url,artwork_removed_at,venue,starts_at,supply,created_by,content_hash,blockchain_network,blockchain_contract_address,blockchain_tx_hash,blockchain_ledger",
     )
     .eq("id", claim.campaign_id)
     .maybeSingle();
@@ -62,6 +62,7 @@ export async function GET(
       image,
       external_url: `${process.env.NEXT_PUBLIC_PILLSFANS_URL || "https://fans.pills.social"}/collection/${claim.id}`,
       attributes: [
+        { trait_type: "Drop ID", value: campaign.drop_id },
         { trait_type: "Edition", value: claim.edition_number },
         { trait_type: "Maximum supply", value: campaign.supply },
         { trait_type: "Creator", value: creator?.username ? `@${creator.username}` : null },
@@ -71,6 +72,16 @@ export async function GET(
       ].filter((attribute) => attribute.value !== null),
       pills: {
         state,
+        drop_id: campaign.drop_id,
+        drop_registration: campaign.blockchain_tx_hash
+          ? {
+              network: campaign.blockchain_network,
+              contract_id: campaign.blockchain_contract_address,
+              transaction_hash: campaign.blockchain_tx_hash,
+              ledger: campaign.blockchain_ledger,
+              explorer_url: stellarTransactionUrl(campaign.blockchain_tx_hash),
+            }
+          : null,
         token_id: claim.token_id,
         edition_number: claim.edition_number,
         content_hash: campaign.content_hash,
