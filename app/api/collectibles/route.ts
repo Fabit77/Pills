@@ -64,7 +64,8 @@ export async function POST(request: Request) {
     const endsAt = String(form.get("endDate") ?? "");
     const startsAtIso = String(form.get("startsAtIso") ?? "") || (startsAt ? `${startsAt}T${String(form.get("startTime") ?? "00:00")}:00Z` : "");
     const endsAtIso = String(form.get("endsAtIso") ?? "") || (endsAt ? `${endsAt}T${String(form.get("endTime") ?? "23:59")}:00Z` : "");
-    const city = String(form.get("city") ?? "").trim().slice(0, 180);
+    const virtualEvent = form.get("virtualEvent") === "true";
+    const city = (virtualEvent ? "Evento virtual" : String(form.get("city") ?? "").trim()).slice(0, 180);
     const intent = form.get("intent") === "submit" ? "submit" : "draft";
     console.info("[collectibles:create] request received", { intent });
     const secretWord = String(form.get("secretWord") ?? "").trim();
