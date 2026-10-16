@@ -36,7 +36,17 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  const { data } = await supabase.auth.getClaims();
+  const { data, error: claimsError } = await supabase.auth.getClaims();
+  if (
+    claimsError &&
+    ["refresh_token_not_found", "refresh_token_already_used", "session_expired"].includes(claimsError.code ?? "")
+  ) {
+    const resetUrl = request.nextUrl.clone();
+    resetUrl.pathname = "/auth/session-reset";
+    resetUrl.search = "";
+    resetUrl.searchParams.set("next", `${path}${request.nextUrl.search}`);
+    return NextResponse.redirect(resetUrl);
+  }
   const claims = data?.claims;
   const signedIn = Boolean(claims);
   let hasUsername = false;

@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/site-url";
+import {
+  clearHostOnlySupabaseSessionCookies,
+  clearSupabaseSessionCookies,
+} from "@/lib/supabase/clear-session-cookies";
 
 export async function GET(request: Request) {
   try {
@@ -11,6 +15,16 @@ export async function GET(request: Request) {
       canonicalLogin.search = requestUrl.search;
       return NextResponse.redirect(canonicalLogin);
     }
+    if (requestUrl.searchParams.get("session_reset") !== "domain") {
+      await clearHostOnlySupabaseSessionCookies();
+      const resetUrl = new URL("/auth/google", origin);
+      resetUrl.search = requestUrl.search;
+      resetUrl.searchParams.set("session_reset", "domain");
+      const resetResponse = NextResponse.redirect(resetUrl);
+      resetResponse.headers.set("Cache-Control", "no-store");
+      return resetResponse;
+    }
+    await clearSupabaseSessionCookies();
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY;
     if (!supabaseUrl || !supabaseKey) throw new Error("Missing Supabase configuration");

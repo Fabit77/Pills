@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/site-url";
 import { ensurePrivyWallet } from "@/lib/privy/server";
+import { clearSupabaseSessionCookies } from "@/lib/supabase/clear-session-cookies";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -15,6 +16,7 @@ export async function GET(request: Request) {
   }
 
   if (code) {
+    await clearSupabaseSessionCookies();
     const supabase = await createClient();
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error && data.user) {
